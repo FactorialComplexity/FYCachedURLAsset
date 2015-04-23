@@ -1,0 +1,9 @@
+Sources/*.xcodeproj/project.xcworkspace
+Sources/*.xcodeproj/xcuserdata
+Pods/*.xcodeproj/project.xcworkspace
+Pods/*.xcodeproj/xcuserdata
+*.xcworkspace/xcuserdata/
+.DS_Store
+
+.idea/
+DerivedData/
