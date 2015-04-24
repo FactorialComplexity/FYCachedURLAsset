@@ -15,6 +15,11 @@
 		7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F261AE9053600F8B91D /* HomeViewController.m */; };
 		7D3E4F351AE905A000F8B91D /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3E4F341AE905A000F8B91D /* AVFoundation.framework */; };
 		7D3E4F3A1AE906A400F8B91D /* FYCachedURLAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */; };
+		7D3E4F721AE90ABD00F8B91D /* FYContentProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F711AE90ABD00F8B91D /* FYContentProvider.m */; };
+		7D3E4F751AE916F300F8B91D /* FYCachedStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F741AE916F300F8B91D /* FYCachedStorage.m */; };
+		7D3E4F771AE91C6400F8B91D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3E4F761AE91C6300F8B91D /* MobileCoreServices.framework */; };
+		7D9E79A71AE9438D0026F570 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */; };
+		7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79AB1AEA43810026F570 /* MediaCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +48,14 @@
 		7D3E4F341AE905A000F8B91D /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7D3E4F381AE906A400F8B91D /* FYCachedURLAsset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FYCachedURLAsset.h; path = Sources/FYCachedURLAsset.h; sourceTree = "<group>"; };
 		7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYCachedURLAsset.m; path = Sources/FYCachedURLAsset.m; sourceTree = "<group>"; };
+		7D3E4F701AE90ABD00F8B91D /* FYContentProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYContentProvider.h; sourceTree = "<group>"; };
+		7D3E4F711AE90ABD00F8B91D /* FYContentProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYContentProvider.m; sourceTree = "<group>"; };
+		7D3E4F731AE916F300F8B91D /* FYCachedStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYCachedStorage.h; sourceTree = "<group>"; };
+		7D3E4F741AE916F300F8B91D /* FYCachedStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYCachedStorage.m; sourceTree = "<group>"; };
+		7D3E4F761AE91C6300F8B91D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		7D9E79AA1AEA43810026F570 /* MediaCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaCell.h; sourceTree = "<group>"; };
+		7D9E79AB1AEA43810026F570 /* MediaCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MediaCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +63,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D9E79A71AE9438D0026F570 /* SystemConfiguration.framework in Frameworks */,
+				7D3E4F771AE91C6400F8B91D /* MobileCoreServices.framework in Frameworks */,
 				7D3E4F351AE905A000F8B91D /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,10 +113,9 @@
 		7D3E4F221AE9053600F8B91D /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				7D9E79A81AEA436C0026F570 /* UI */,
 				7D3E4F231AE9053600F8B91D /* AppDelegate.h */,
 				7D3E4F241AE9053600F8B91D /* AppDelegate.m */,
-				7D3E4F251AE9053600F8B91D /* HomeViewController.h */,
-				7D3E4F261AE9053600F8B91D /* HomeViewController.m */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -127,6 +141,8 @@
 		7D3E4F361AE905A700F8B91D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */,
+				7D3E4F761AE91C6300F8B91D /* MobileCoreServices.framework */,
 				7D3E4F341AE905A000F8B91D /* AVFoundation.framework */,
 			);
 			name = Frameworks;
@@ -137,8 +153,31 @@
 			children = (
 				7D3E4F381AE906A400F8B91D /* FYCachedURLAsset.h */,
 				7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */,
+				7D3E4F701AE90ABD00F8B91D /* FYContentProvider.h */,
+				7D3E4F711AE90ABD00F8B91D /* FYContentProvider.m */,
+				7D3E4F731AE916F300F8B91D /* FYCachedStorage.h */,
+				7D3E4F741AE916F300F8B91D /* FYCachedStorage.m */,
 			);
 			name = Model;
+			sourceTree = "<group>";
+		};
+		7D9E79A81AEA436C0026F570 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				7D9E79A91AEA43730026F570 /* Cells */,
+				7D3E4F251AE9053600F8B91D /* HomeViewController.h */,
+				7D3E4F261AE9053600F8B91D /* HomeViewController.m */,
+			);
+			name = UI;
+			sourceTree = "<group>";
+		};
+		7D9E79A91AEA43730026F570 /* Cells */ = {
+			isa = PBXGroup;
+			children = (
+				7D9E79AA1AEA43810026F570 /* MediaCell.h */,
+				7D9E79AB1AEA43810026F570 /* MediaCell.m */,
+			);
+			name = Cells;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -244,6 +283,9 @@
 				7D3E4F3A1AE906A400F8B91D /* FYCachedURLAsset.m in Sources */,
 				7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */,
 				7D3E4F2F1AE9053600F8B91D /* AppDelegate.m in Sources */,
+				7D3E4F721AE90ABD00F8B91D /* FYContentProvider.m in Sources */,
+				7D3E4F751AE916F300F8B91D /* FYCachedStorage.m in Sources */,
+				7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */,
 				7D3E4F2E1AE9053600F8B91D /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,6 +407,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -380,6 +423,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",

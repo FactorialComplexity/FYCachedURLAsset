@@ -8,6 +8,18 @@
 
 @import AVFoundation;
 
+typedef void (^ProgressBlock) (CGFloat totalProgress);
+
 @interface FYCachedURLAsset : AVURLAsset
+
+/**
+ *  To allow caching we're doing some hacks with URL.
+ *	These hacks force resource loader to ask for content.
+ *	In this case you can't rely on regular URL property of AVAsset.
+ *	Use originalURL instead.
+ */
+@property (nonatomic, readonly) NSURL *originalURL;
+
++ (instancetype)cachedURLAssetWithURL:(NSURL *)url;
 
 @end
