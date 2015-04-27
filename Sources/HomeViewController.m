@@ -11,6 +11,7 @@
 
 // Model
 #import "FYCachedURLAsset.h"
+#import "FYContentProvider.h"
 #import "FYCachedStorage.h"
 
 // Cells
@@ -33,11 +34,17 @@ UITableViewDataSource
 	AVPlayer *_player;
 }
 
+#pragma mark - Lifecycle
+
 - (void)viewDidLoad {
 	[super viewDidLoad];
 
 	[self setupDatasource];
+	
+	[FYContentProvider shared].ProgressBlock
 }
+
+#pragma mark - Callbacks
 
 - (IBAction)timeSliderValueChanged:(UISlider *)sender {
 	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
@@ -45,6 +52,8 @@ UITableViewDataSource
 	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
 		
 		CMTime time = CMTimeMake(sender.value * (float)asset.duration.value / asset.duration.timescale, 1);
+		
+		[_player pause];
 		
 		[_player seekToTime:time completionHandler:^(BOOL finished) {
 			if (finished) {
@@ -59,8 +68,46 @@ UITableViewDataSource
 	}
 }
 
-- (NSURL *)testURL {
-	return [NSURL URLWithString:@"http://img-9gag-fun.9cache.com/photo/aP4rz0n_460sv.mp4"];
+- (IBAction)backwardClicked:(id)sender {
+	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
+	
+	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
+		
+		CMTime time = CMTimeMake(_timeSlider.value * (float)asset.duration.value / asset.duration.timescale - 2, 1);
+		
+		[_player pause];
+		[_player seekToTime:time completionHandler:^(BOOL finished) {
+			if (finished) {
+				int32_t seconds = time.value % 60;
+				int32_t minutes = (int32_t)time.value / 60;
+				
+				_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
+				
+				[_player play];
+			}
+		}];
+	}
+}
+
+- (IBAction)forwardClicked:(id)sender {
+	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
+	
+	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
+		
+		CMTime time = CMTimeMake(_timeSlider.value * (float)asset.duration.value / asset.duration.timescale + 20, 1);
+		
+		[_player pause];
+		[_player seekToTime:time completionHandler:^(BOOL finished) {			
+			if (finished) {
+				int32_t seconds = time.value % 60;
+				int32_t minutes = (int32_t)time.value / 60;
+				
+				_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
+				
+				[_player play];
+			}
+		}];
+	}
 }
 
 #pragma mark - KVO

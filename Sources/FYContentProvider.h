@@ -18,6 +18,9 @@
 AVAssetResourceLoaderDelegate
 >
 
+// For testing
+@property (nonatomic) void (^progressBlock) (NSInteger startOffset, NSInteger downloaded, NSInteger totalBytesToDownload);
+
 + (instancetype)shared;
 
 - (void)startResourceLoadingFromURL:(NSURL *)url toCachedFilePath:(NSString *)cachedFilePath

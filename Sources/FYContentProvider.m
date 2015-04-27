@@ -15,9 +15,23 @@
 @import MobileCoreServices;
 @import SystemConfiguration;
 
+static NSTimeInterval const kMaximumWaitingTimeTreshold = 5.0f;
+
+typedef enum {
+	// Regular streaming (over internet) or from cached file.
+	kStreamingStateStreaming,
+	// Streaming on demand (without caching). This happens when user wants to seek to specific times.
+	kStreamingStateOnDemand
+} StreamingState;
+
 #pragma mark - FYContentRequester
 
 @interface FYContentRequester : NSObject
+
+/**
+ *  Current streaming state for content requester.
+ */
+@property (nonatomic) StreamingState streamingState;
 
 /**
  *  Original resource URL from which should be cached.
@@ -45,6 +59,11 @@
  *  Tells if current content provider is streaming data from local storage.
  */
 @property (nonatomic) BOOL isStreamingFromCache;
+
+/**
+ *  Offset from the beggining of the file that is used when resuming download to approximate seeking time.
+ */
+@property (nonatomic) NSInteger resumeDownloadingOffset;
 
 /**
  *  Raw media data that was fetched from given resource URL or from cached file.
@@ -171,7 +190,6 @@ NSURLConnectionDataDelegate
 		if ([requester.resourceURL isEqual:url]) {
 			alreadyLoading = YES;
 			requester.totalRequestersCount++;
-			NSLog(@"++Requesters: %d", requester.totalRequestersCount);
 			break;
 		}
 	}
@@ -196,7 +214,6 @@ NSURLConnectionDataDelegate
 					[self startLoadingWithURLRequest:request forContentRequester:requester];
 				} else {
 					NSLog(@"[Warning]: Isn't connected to the internet. Can't stream over it.");
-					[self stopResourceLoadingFromURL:url];
 				}
 			};
 			
@@ -250,10 +267,8 @@ NSURLConnectionDataDelegate
 	FYContentRequester *requester = [self contentRequesterForURL:url];
 	
 	requester.totalRequestersCount--;
-	NSLog(@"--Requesters: %d", requester.totalRequestersCount);
 
 	if (requester.totalRequestersCount == 0) {
-		// TODO: Invalidate
 		for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
 			// TODO: Fill with normal error.
 			[request finishLoadingWithError:[NSError errorWithDomain:NSCocoaErrorDomain
@@ -291,6 +306,8 @@ NSURLConnectionDataDelegate
 
 - (void)processAllPendingRequests {
 	for (FYContentRequester *requester in _contentRequesters) {
+		NSLog(@"Got %d requests", (int32_t)requester.pendingRequests.count);
+
 		for (AVAssetResourceLoadingRequest *request in [requester.pendingRequests copy]) {
 			BOOL didSatisfyRequest = [self tryToSatisfyRequest:request forRequester:requester];
 			
@@ -329,12 +346,15 @@ NSURLConnectionDataDelegate
 		AVAssetResourceLoadingDataRequest *dataRequest = request.dataRequest;
 		NSData *availableData = requester.mediaData;
 		
-		if (dataRequest.currentOffset <= availableData.length) {
-			CGFloat bytesGot = availableData.length - request.dataRequest.currentOffset;
+		if (dataRequest.currentOffset < requester.resumeDownloadingOffset) {
+			NSLog(@"[ContentProvider]: Couldn't satisfy request, because requested data is behind current download offset.");
+			return NO;
+		} else if (dataRequest.currentOffset <= availableData.length + requester.resumeDownloadingOffset) {
+			CGFloat bytesGot = availableData.length + requester.resumeDownloadingOffset - request.dataRequest.currentOffset;
 			CGFloat bytesToGive = MIN(bytesGot, dataRequest.requestedOffset + dataRequest.requestedLength - dataRequest.currentOffset);
 			
-			NSRange requestedDataRange = (NSRange){
-				request.dataRequest.currentOffset,
+			NSRange requestedDataRange = (NSRange) {
+				request.dataRequest.currentOffset - requester.resumeDownloadingOffset,
 				bytesToGive
 			};
 			
@@ -346,7 +366,7 @@ NSURLConnectionDataDelegate
 	}
 	
 	if (didRespondToDataRequest && didRespondToInformationRequest) {
-//		NSLog(@"Did handle request: %@", request);
+		NSLog(@"Did handle request: %@", request.dataRequest);
 		[request finishLoading];
 		
 		return YES;
@@ -410,16 +430,107 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - AVAssetResourceLoaderDelegate
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-//	NSLog(@"Wanted to wait for loading for request: %@", loadingRequest);
+	NSLog(@"Wanted to wait for loading for request: %@", loadingRequest.dataRequest);
 	FYContentRequester *requester = [self contentRequesterForURL:loadingRequest.request.URL];
 
+	// Try to satisfy this request right now.
 	BOOL didSatisfy = [self tryToSatisfyRequest:loadingRequest forRequester:requester];
 	
 	if (!didSatisfy) {
+		// If we didn't satisfy request -> add it to pending request to process later.
 		[requester.pendingRequests addObject:loadingRequest];
+		// Process other pending requests that may now be satisfied.
 		[self processAllPendingRequests];
+		
+		// If we're not streaming from cache and we have active connection and loading request is asking for data then:
+		if (!requester.isStreamingFromCache && requester.connectionDate && loadingRequest.dataRequest) {
+			// If datax request is asking for data that we didn't have yet - calculate how much bytes we are from requested offset.
+			NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - (requester.mediaData.length + requester.resumeDownloadingOffset);
+			NSLog(@"KBytes to download: %d", (int32_t)bytesToDownload / 1024);
+			
+			if (bytesToDownload > 0) {
+				// Calculate average download speed and how much time we need to catch up with requested offset.
+				NSTimeInterval timePassed = -[requester.connectionDate timeIntervalSinceNow];
+				NSInteger totalBytesDownloaded = requester.mediaData.length;
+				
+				CGFloat bytesPerSecond = totalBytesDownloaded / timePassed;
+				
+				CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
+				NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
+				
+				if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
+					NSLog(@"[ContentProvider]: Will transite ON DEMAND state!");
+					requester.streamingState = kStreamingStateOnDemand;
+					
+					// Perform cleanup and several adjustments to fetch data from requested offset.
+					[requester.connection cancel];
+					requester.connection = nil;
+					requester.connectionDate = nil;
+					
+					for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
+						if (request != loadingRequest) {
+							[request finishLoadingWithError:nil];
+						}
+					}
+					
+					[requester.pendingRequests removeAllObjects];
+					[requester.pendingRequests addObject:loadingRequest];
+					requester.resumeDownloadingOffset = loadingRequest.dataRequest.requestedOffset;
+					[requester.mediaData setLength:0];
+					
+					// Build headers to request data from requested offset.
+					NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requester.resourceURL];
+					
+					NSString *etag = requester.response.allHeaderFields[@"ETag"];
+					NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.resumeDownloadingOffset];
+					
+					if (etag.length > 0) {
+						[request setValue:etag forHTTPHeaderField:@"If-Range"];
+					}
+					
+					[request setValue:range forHTTPHeaderField:@"Range"];
+
+					[self startLoadingWithURLRequest:request forContentRequester:requester];
+				} else {
+					NSLog(@"[ContentProvider]: Will wait %.2f seconds...", approximateTimeForSeeking);
+				}
+			} else if (requester.resumeDownloadingOffset > loadingRequest.dataRequest.requestedOffset) {
+				requester.streamingState = kStreamingStateOnDemand;
+
+				// Perform cleanup and several adjustments to fetch data from requested offset.
+				[requester.connection cancel];
+				requester.connection = nil;
+				requester.connectionDate = nil;
+				
+				for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
+					if (request != loadingRequest) {
+						[request finishLoadingWithError:nil];
+					}
+				}
+				
+				[requester.pendingRequests removeAllObjects];
+				[requester.pendingRequests addObject:loadingRequest];
+				requester.resumeDownloadingOffset = loadingRequest.dataRequest.requestedOffset;
+				[requester.mediaData setLength:0];
+				
+				// Build headers to request data from requested offset.
+				NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requester.resourceURL];
+				
+				NSString *etag = requester.response.allHeaderFields[@"ETag"];
+				NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.resumeDownloadingOffset];
+				
+				if (etag.length > 0) {
+					[request setValue:etag forHTTPHeaderField:@"If-Range"];
+				}
+				
+				[request setValue:range forHTTPHeaderField:@"Range"];
+				
+				[self startLoadingWithURLRequest:request forContentRequester:requester];
+			}
+
+		}
 	}
-	
+
 	return YES;
 }
 
@@ -432,12 +543,13 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	// TODO: Rework this logic completely.
+	// TODO: Rework this logic. 206 means partial content, but in my case it gave me full content from specified range.
+	// Maybe it can return not full range, needs testing.
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
 	NSLog(@"Response: %@", httpResponse);
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 	
-	// TODO: In future version:
+	//	 TODO: In future version:
 	// Check if we already have cached file and if yes -> check if it's up-to date.
 	
 	if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
@@ -452,6 +564,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 		}
 		
 		requester.connectionDate = [NSDate date];
+		
+		[self processAllPendingRequests];
 	} else {
 		NSLog(@"Will cancel connection!");
 		[connection cancel];
@@ -463,10 +577,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
 	static int failer = 0;
 	
-	NSLog(@"%s", __FUNCTION__);
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 	
 	[requester.mediaData appendData:data];
+	
+	NSLog(@"%d/%d KB", (int32_t)requester.mediaData.length / 1024 + requester.resumeDownloadingOffset / 1024, (int32_t)requester.response.expectedContentLength / 1024);
 	
 	[self processAllPendingRequests];
 	
@@ -487,21 +602,24 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 	
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 
-	[requester.mediaData writeToFile:requester.cacheFilenamePath atomically:NO];
-	
-	// Cleanup any temp files that may exist in case of resuming download.
-	NSString *tempFilePath = [requester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
-	[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+	if (requester.streamingState == kStreamingStateStreaming) {
+		[requester.mediaData writeToFile:requester.cacheFilenamePath atomically:NO];
+		
+		// Cleanup any temp files that may exist in case of resuming download.
+		NSString *tempFilePath = [requester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
+		[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+	}
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
 	NSLog(@"%s", __FUNCTION__);
 	// Save all gathered data to ~part file.
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
-	
-	NSString *partFilePath = [requester.cacheFilenamePath stringByAppendingString:@"~part"];
-	
-	if (requester.mediaData.length > 0) {
+
+	if (requester.mediaData.length > 0 && requester.streamingState == kStreamingStateStreaming) {
+		
+		NSString *partFilePath = [requester.cacheFilenamePath stringByAppendingString:@"~part"];
+
 		[requester.mediaData writeToFile:partFilePath atomically:NO];
 	}
 	
