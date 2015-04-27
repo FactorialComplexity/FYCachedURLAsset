@@ -171,7 +171,7 @@ NSURLConnectionDataDelegate
 		if ([requester.resourceURL isEqual:url]) {
 			alreadyLoading = YES;
 			requester.totalRequestersCount++;
-			
+			NSLog(@"++Requesters: %d", requester.totalRequestersCount);
 			break;
 		}
 	}
@@ -226,7 +226,7 @@ NSURLConnectionDataDelegate
 					}
 					
 					[request setValue:range forHTTPHeaderField:@"Range"];
-//					startFetchingBlock(request);
+					startFetchingBlock(request);
 				}
 			} else {
 				NSLog(@"[ContentProvider]: Hasn't got cached files. Will download from scratch!");
@@ -250,7 +250,8 @@ NSURLConnectionDataDelegate
 	FYContentRequester *requester = [self contentRequesterForURL:url];
 	
 	requester.totalRequestersCount--;
-	
+	NSLog(@"--Requesters: %d", requester.totalRequestersCount);
+
 	if (requester.totalRequestersCount == 0) {
 		// TODO: Invalidate
 		for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
@@ -261,6 +262,7 @@ NSURLConnectionDataDelegate
 		}
 		
 		[requester.pendingRequests removeAllObjects];
+		[requester.connection cancel];
 		
 		[_contentRequesters removeObject:requester];
 	}
@@ -430,24 +432,32 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	NSLog(@"Response: %@", response);
-	// TODO: Move all code to private queue.
+	// TODO: Rework this logic completely.
+	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+	NSLog(@"Response: %@", httpResponse);
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 	
 	// TODO: In future version:
 	// Check if we already have cached file and if yes -> check if it's up-to date.
 	
-	// Store additional info.
-	if (!requester.response) {
-		requester.response = (NSHTTPURLResponse *)response;
+	if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
+		// Store additional info.
+		if (!requester.response) {
+			requester.response = httpResponse;
+			
+			// Save response in metadata file.
+			NSString *metadataFilePath = [requester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
+			NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:response];
+			[metadataBytes writeToFile:metadataFilePath atomically:NO];
+		}
 		
-		// Save response in metadata file.
-		NSString *metadataFilePath = [requester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
-		NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:response];
-		[metadataBytes writeToFile:metadataFilePath atomically:NO];
+		requester.connectionDate = [NSDate date];
+	} else {
+		NSLog(@"Will cancel connection!");
+		[connection cancel];
+		
+		// TODO: Invalidate.
 	}
-	
-	requester.connectionDate = [NSDate date];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
@@ -478,6 +488,10 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 
 	[requester.mediaData writeToFile:requester.cacheFilenamePath atomically:NO];
+	
+	// Cleanup any temp files that may exist in case of resuming download.
+	NSString *tempFilePath = [requester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
+	[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
