@@ -10,8 +10,6 @@
 #import "FYCachedURLAsset.h"
 #import "FYContentProvider.h"
 
-@import MobileCoreServices;
-
 @interface FYCachedURLAsset ()
 <
 AVAssetResourceLoaderDelegate,
@@ -25,13 +23,13 @@ NSURLConnectionDataDelegate
 
 #pragma mark - Init
 
-+ (instancetype)cachedURLAssetWithURL:(NSURL *)url {
++ (instancetype)cachedURLAssetWithURL:(NSURL *)url
+						cacheFilePath:(NSString *)path {
 
 	FYCachedURLAsset *asset = [[self alloc] initWithURL:url
 									options:@{AVURLAssetReferenceRestrictionsKey : @(AVAssetReferenceRestrictionForbidAll)}];
-	
-	[[FYContentProvider shared] registerAsset:asset];
-//	[[FYContentProvider shared] startResourceLoadingFromURL:url withResourceLoader:asset.resourceLoader];
+
+	[[FYContentProvider shared] startResourceLoadingFromURL:url toCachedFilePath:path withResourceLoader:asset.resourceLoader];
 	
 	return asset;
 }
@@ -44,6 +42,10 @@ NSURLConnectionDataDelegate
 	}
 	
 	return self;
+}
+
+- (void)dealloc {
+	[[FYContentProvider shared] stopResourceLoadingFromURL:self.originalURL];
 }
 
 #pragma mark - Private

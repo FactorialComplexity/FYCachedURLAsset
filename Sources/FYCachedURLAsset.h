@@ -20,6 +20,12 @@ typedef void (^ProgressBlock) (CGFloat totalProgress);
  */
 @property (nonatomic, readonly) NSURL *originalURL;
 
-+ (instancetype)cachedURLAssetWithURL:(NSURL *)url;
+/**
+ *  Creates cached url asset instance with given url and given path.
+ *	If path leads to some file then that means that this file is cached specially for given URL.
+ *	If provide path to existing file that is not associated with given URL -> you'll get wrong behaviour.
+ */
++ (instancetype)cachedURLAssetWithURL:(NSURL *)url
+						cacheFilePath:(NSString *)path;
 
 @end

@@ -8,6 +8,9 @@
 
 @import Foundation;
 
+/**
+ *  TODO: This class is not needed in current version.
+ */
 @interface FYCachedStorage : NSObject
 
 @property (nonatomic) NSArray *allCachedMediaFiles; // TODO:

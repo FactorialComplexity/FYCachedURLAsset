@@ -8,7 +8,48 @@
 
 #import "FYCachedStorage.h"
 
-@implementation FYCachedStorage
+#pragma mark - FYCachedFileInfo
+
+@interface FYCachedFileInfo : NSObject
+<
+NSCoding
+>
+
+/**
+ *	Path to cached file.
+ */
+@property (nonatomic) NSString *cachedFilePath;
+
+/**
+ *  URL to remote server on which given file is stored.
+ */
+@property (nonatomic) NSURL *remoteURL;
+
+@end
+
+@implementation FYCachedFileInfo
+
+#pragma mark - NSCoding
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+	if (self = [super init]) {
+		
+	}
+	
+	return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+	
+}
+
+@end
+
+#pragma mark - FYCachedStorage
+
+@implementation FYCachedStorage {
+	NSMutableArray *_cachedFilesInfo;
+}
 
 #pragma mark - Singleton
 
@@ -21,6 +62,17 @@
 	});
 	
 	return manager;
+}
+
+#pragma mark - Init
+
+- (instancetype)init {
+	if (self = [super init]) {
+		// TODO: Move to bg.
+		[self loadCachedDatabase];
+	}
+	
+	return self;
 }
 
 #pragma mark - Public
@@ -78,7 +130,7 @@
 	return [NSFileHandle fileHandleForUpdatingAtPath:filePath];
 }
 
-#pragma mark - Private
+#pragma mark - Paths
 
 - (NSString *)cachedDirectoryPath {
 	NSString *cachesPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
@@ -100,6 +152,48 @@
 
 - (NSString *)cachedDirectoryByAppendingPathComponent:(NSString *)path {
 	return [[self cachedDirectoryPath] stringByAppendingPathComponent:path];
+}
+
+- (NSString *)allCachedFilesDBFilePath {
+	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+																   NSUserDomainMask,
+																   YES) firstObject];
+	
+	NSString *dbPath = [documentsPath stringByAppendingString:@"CachedMedia.cdb"];
+	
+	if (![[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
+		BOOL didCreate = [[NSFileManager defaultManager] createFileAtPath:dbPath contents:nil attributes:nil];
+		
+		if (!didCreate) {
+			NSLog(@"[Warning]: Failed to create database file for cached media!");
+		}
+	}
+	
+	return dbPath;
+}
+
+#pragma mark - Database Management
+
+- (void)loadCachedDatabase {
+	NSString *dbPath = [self allCachedFilesDBFilePath];
+	
+	NSMutableArray *cachedFilesInfo = [NSKeyedUnarchiver unarchiveObjectWithFile:dbPath];
+	
+	// Remove all files that are not stored in our db.
+//	for (FYCachedFileInfo *cachedFileInfo in cachedFilesInfo) {
+//	}
+	
+	if (!_cachedFilesInfo) {
+		_cachedFilesInfo = [NSMutableArray new];
+	}
+}
+
+- (void)saveToCachedDatabase {
+	NSString *dbPath = [self allCachedFilesDBFilePath];
+	
+	NSData *bytes = [NSKeyedArchiver archivedDataWithRootObject:_cachedFilesInfo];
+	
+	[bytes writeToFile:dbPath atomically:NO];
 }
 
 @end

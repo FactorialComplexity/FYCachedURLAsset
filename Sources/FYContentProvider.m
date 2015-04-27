@@ -15,49 +15,78 @@
 @import MobileCoreServices;
 @import SystemConfiguration;
 
-#define DEPRECATED_FLOW
-
 #pragma mark - FYContentRequester
-
-// TODO: Refactor totally.
 
 @interface FYContentRequester : NSObject
 
-@property (nonatomic) NSMutableArray *requestingAssets;
-@property (nonatomic) BOOL isStreamingFromCache;
+/**
+ *  Original resource URL from which should be cached.
+ */
+@property (nonatomic) NSURL *resourceURL;
+
+/**
+ *  Total count of current requesters. Act like a reference counting mechanism.
+ *	When it drops to zero it's treated as no one needs content from given URL.
+ *	In this case content requester deallocates and performs cleanup.
+ */
+@property (nonatomic) NSInteger totalRequestersCount;
+
+/**
+ *  Total requests made from AVFoundation framework that are asking for media data.
+ */
 @property (nonatomic) NSMutableArray *pendingRequests;
-@property (nonatomic) NSURL *originalURL;
-@property (nonatomic) NSFileHandle *metadataFile;
-@property (nonatomic) NSFileHandle *cachedFile;
-@property (nonatomic) NSURLResponse *response;
-@property (nonatomic) NSURLConnection *connection;
+
+/**
+ *  Cache filename path to which data should be stored from resourceURL.
+ */
+@property (nonatomic) NSString *cacheFilenamePath;
+
+/**
+ *  Tells if current content provider is streaming data from local storage.
+ */
+@property (nonatomic) BOOL isStreamingFromCache;
+
+/**
+ *  Raw media data that was fetched from given resource URL or from cached file.
+ */
 @property (nonatomic) NSMutableData *mediaData;
 
-@property (nonatomic) NSURL *resourceURL;
+/**
+ *  Connection that has been established for downloading from given resource URL.
+ */
+@property (nonatomic) NSURLConnection *connection;
+
+/**
+ *  Response for given connection. Used to check is cached resource up-to date or to get mime type and length.
+ */
+@property (nonatomic) NSHTTPURLResponse *response;
+
+/**
+ *  Date on which connection has been established. It's used for seeking situation.
+ *	By approximating how fast we will download till new time we decide to invalidate caching and restart request or to wait.
+ */
 @property (nonatomic) NSDate *connectionDate;
 
 @end
 
 @implementation FYContentRequester
 
-- (instancetype)initWithURL:(NSURL *)resourceURL {
+- (instancetype)initWithURL:(NSURL *)resourceURL cacheFilePath:(NSString *)path {
 	if (self = [super init]) {
 		_resourceURL = resourceURL;
-		
+		_cacheFilenamePath = path;
+
 		_pendingRequests = [NSMutableArray new];
 		_mediaData = [NSMutableData new];
+		
+		_totalRequestersCount = 1;
 	}
 	
 	return self;
 }
 
-- (instancetype)init {
-	if (self = [super init]) {
-		_requestingAssets = [NSMutableArray new];
-		_pendingRequests = [NSMutableArray new];
-		_mediaData = [NSMutableData new];
-	}
-	return self;
+- (void)dealloc {
+	NSLog(@"%s", __FUNCTION__);
 }
 
 @end
@@ -68,7 +97,8 @@ typedef void (^FYReachabilityCallback) (BOOL isConnectedToTheInternet);
 
 @interface FYContentProvider ()
 <
-AVAssetResourceLoaderDelegate
+AVAssetResourceLoaderDelegate,
+NSURLConnectionDataDelegate
 >
 @end
 
@@ -114,7 +144,9 @@ AVAssetResourceLoaderDelegate
 		SCNetworkReachabilityScheduleWithRunLoop(_reachability, CFRunLoopGetMain(), (CFStringRef)NSRunLoopCommonModes);
 		
 		_reachabilityCallback = ^(BOOL isReachable) {
-			
+			if (!isReachable) {
+				// TODO: Invalidate everything
+			}
 		};
 	}
 	return self;
@@ -128,7 +160,8 @@ AVAssetResourceLoaderDelegate
 
 #pragma mark - Public
 
-- (void)startResourceLoadingFromURL:(NSURL *)url withResourceLoader:(AVAssetResourceLoader *)loader {
+- (void)startResourceLoadingFromURL:(NSURL *)url toCachedFilePath:(NSString *)cachedFilePath
+			withResourceLoader:(AVAssetResourceLoader *)loader {
 	[loader setDelegate:self queue:dispatch_get_main_queue()];
 	
 	// Check if we're already loading something from given URL.
@@ -137,14 +170,17 @@ AVAssetResourceLoaderDelegate
 	for (FYContentRequester *requester in _contentRequesters) {
 		if ([requester.resourceURL isEqual:url]) {
 			alreadyLoading = YES;
+			requester.totalRequestersCount++;
+			
+			break;
 		}
 	}
-
-	NSLog(@"Registering URL: %@. Already loading: %@", url, alreadyLoading ? @"YES" : @"NO");
-
+	
+	NSLog(@"[ContentProvider]: Registering URL: %@. Already loading: %@", [url lastPathComponent], alreadyLoading ? @"YES" : @"NO");
+	
 	if (!alreadyLoading) {
 		// We're not loading from given URL yet.
-		FYContentRequester *requester = [[FYContentRequester alloc] initWithURL:url];
+		FYContentRequester *requester = [[FYContentRequester alloc] initWithURL:url cacheFilePath:cachedFilePath];
 		
 		[_contentRequesters addObject:requester];
 		
@@ -152,77 +188,98 @@ AVAssetResourceLoaderDelegate
 			// 1. If we have internet connection & cached version -> check on server is cached version is up-to date.
 			// 2. If we have internet connection & !cached version -> create temp file and download data into it.
 			// 3. If we don't have internet connection -> check for cached version on disk. If it's present -> play it.
-			if (isConnectedToTheInternet) {
-				NSURLRequest *request = [NSURLRequest requestWithURL:url];
-				requester.connection = [NSURLConnection connectionWithRequest:request delegate:self];
-				[requester.connection start];
-			} else {
-				// Find cached version of file, otherwise we can't do anything here.
+			
+			// TODO: Implement this flow at the end (checking if cached version changed on server).
+			// For now simply check if we have cached file -> play it otherwise stream over internet.
+			void (^startFetchingBlock) (NSURLRequest *request) = ^(NSURLRequest *request) {
+				if (isConnectedToTheInternet) {
+					[self startLoadingWithURLRequest:request forContentRequester:requester];
+				} else {
+					NSLog(@"[Warning]: Isn't connected to the internet. Can't stream over it.");
+					[self stopResourceLoadingFromURL:url];
+				}
+			};
+			
+			NSString *metaFilePath = [cachedFilePath stringByAppendingString:[self metadataFileSuffix]];
+			NSString *tempFilePath = [cachedFilePath stringByAppendingString:[self temporaryFileSuffix]];
+			
+			BOOL cachedFileExist = [[NSFileManager defaultManager] fileExistsAtPath:cachedFilePath];
+			BOOL metaFileExist = [[NSFileManager defaultManager] fileExistsAtPath:metaFilePath];
+			BOOL tempCachedFileExist = [[NSFileManager defaultManager] fileExistsAtPath:tempFilePath];
+			
+			if (metaFileExist && (cachedFileExist || tempCachedFileExist)) {
+				NSLog(@"[ContentProvider]: Got cached file!");
+				requester.response = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
+				requester.mediaData = [[NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath] mutableCopy];
+				requester.isStreamingFromCache = cachedFileExist;
 				
+				if (!cachedFileExist) {
+					NSLog(@"[ContentProvider]: Cached file isn't fully downloaded!");
+					// Resume downloading non-fully cached file.
+					NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+					
+					NSString *etag = requester.response.allHeaderFields[@"ETag"];
+					NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.mediaData.length];
+					
+					if (etag.length > 0) {
+						[request setValue:etag forHTTPHeaderField:@"If-Range"];
+					}
+					
+					[request setValue:range forHTTPHeaderField:@"Range"];
+//					startFetchingBlock(request);
+				}
+			} else {
+				NSLog(@"[ContentProvider]: Hasn't got cached files. Will download from scratch!");
+				startFetchingBlock([NSURLRequest requestWithURL:url]);
 			}
+			
+// TODO:
+//			if (isConnectedToTheInternet) {
+//				NSURLRequest *request = [NSURLRequest requestWithURL:url];
+//				requester.connection = [NSURLConnection connectionWithRequest:request delegate:self];
+//				[requester.connection start];
+//			} else {
+//				 Find cached version of file, otherwise we can't do anything here.
+//
+//			}
 		}];
 	}
 }
 
 - (void)stopResourceLoadingFromURL:(NSURL *)url {
-	// TODO:
+	FYContentRequester *requester = [self contentRequesterForURL:url];
 	
-}
-
-- (void)registerAsset:(FYCachedURLAsset *)asset {
-	[asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
-
-	BOOL alreadyCaching = NO;
-	// Check if we already have the same asset requesting data.
-	for (FYContentRequester *requester in _contentRequesters) {
-		FYCachedURLAsset *anyAsset = [requester.requestingAssets firstObject];
-		
-		if ([anyAsset.originalURL isEqual:asset.originalURL]) {
-			[requester.requestingAssets addObject:asset];
-			
-			alreadyCaching = YES;
-			break;
+	requester.totalRequestersCount--;
+	
+	if (requester.totalRequestersCount == 0) {
+		// TODO: Invalidate
+		for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
+			// TODO: Fill with normal error.
+			[request finishLoadingWithError:[NSError errorWithDomain:NSCocoaErrorDomain
+																code:0
+															userInfo:nil]];
 		}
+		
+		[requester.pendingRequests removeAllObjects];
+		
+		[_contentRequesters removeObject:requester];
 	}
-	
-	NSLog(@"Registering asset: %@ with URL: %@. Already caching: %@", asset, asset.originalURL, alreadyCaching ? @"YES" : @"NO");
-	if (!alreadyCaching) {
-		// Asset isn't registered yet.
-		FYContentRequester *requester = [FYContentRequester new];
-		NSString *cachedFilename = [[asset.originalURL absoluteString] lastPathComponent];
-		NSString *filenameMetadata = [cachedFilename stringByAppendingString:@"~meta"];
-
-		[requester.requestingAssets addObject:asset];
-		requester.originalURL = asset.originalURL;
-		requester.isStreamingFromCache = [[FYCachedStorage shared] cachedFileExistWithName:cachedFilename];
-		requester.cachedFile = [[FYCachedStorage shared] cachedFileWithName:cachedFilename];
-		requester.metadataFile = [[FYCachedStorage shared] cachedFileWithName:filenameMetadata];
-
-		[_contentRequesters addObject:requester];
-	}
-}
-
-- (void)unregisterAsset:(FYCachedURLAsset *)asset {
-	[self invalidateForAsset:asset];
 }
 
 #pragma mark - Private
 
-- (FYContentRequester *)contentRequesterForResourseLoader:(AVAssetResourceLoader *)loader {
-	for (FYContentRequester *requester in _contentRequesters) {
-		for (FYCachedURLAsset *asset in requester.requestingAssets) {
-			if ([asset.resourceLoader isEqual:loader]) {
-				return requester;
-			}
-		}
-	}
-	
-	return nil;
+- (NSURL *)modifySongURL:(NSURL *)url withCustomScheme:(NSString *)scheme {
+	NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
+	components.scheme = scheme;
+ 
+	return [components URL];
 }
 
-- (FYContentRequester *)contentRequesterConnection:(NSURLConnection *)connection {
+- (FYContentRequester *)contentRequesterForURL:(NSURL *)url {
 	for (FYContentRequester *requester in _contentRequesters) {
-		if ([requester.connection isEqual:connection]) {
+		NSURL *originalURL = [self modifySongURL:url withCustomScheme:requester.resourceURL.scheme];
+		
+		if ([requester.resourceURL isEqual:originalURL]) {
 			return requester;
 		}
 	}
@@ -287,7 +344,7 @@ AVAssetResourceLoaderDelegate
 	}
 	
 	if (didRespondToDataRequest && didRespondToInformationRequest) {
-		NSLog(@"Did handle request: %@", request);
+//		NSLog(@"Did handle request: %@", request);
 		[request finishLoading];
 		
 		return YES;
@@ -296,24 +353,17 @@ AVAssetResourceLoaderDelegate
 	}
 }
 
-- (void)invalidateForAsset:(FYCachedURLAsset *)asset {
-	for (FYContentRequester *requester in [_contentRequesters copy]) {
-		[requester.requestingAssets removeObject:asset];
-		
-		if (requester.requestingAssets.count == 0) {
-			[requester.connection cancel];
-			
-			[_contentRequesters removeObject:requester];
-		}
-	}
-}
-
 - (NSString *)temporaryFileSuffix {
-	return @"~temp";
+	return @"~part";
 }
 
 - (NSString *)metadataFileSuffix {
 	return @"~meta";
+}
+
+- (void)startLoadingWithURLRequest:(NSURLRequest *)request forContentRequester:(FYContentRequester *)requester {
+	requester.connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	[requester.connection start];
 }
 
 #pragma mark - SCNetworkReachability
@@ -324,6 +374,7 @@ AVAssetResourceLoaderDelegate
 		!callback ? : callback([self isReachableWithFlags:_latestReachabilityFlags]);
 	} else {
 		if (callback) {
+			// Store callback, because network reachability isn't yet determined.
 			[_networkReachableWaiters addObject:callback];
 		}
 	}
@@ -347,9 +398,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 }
 
 - (BOOL)isReachableWithFlags:(SCNetworkReachabilityFlags)flags {
-	// Airplane mode:
 	SCNetworkReachabilityFlags airplaneFlags = kSCNetworkReachabilityFlagsConnectionRequired |
-	kSCNetworkReachabilityFlagsTransientConnection;
+												kSCNetworkReachabilityFlagsTransientConnection;
 	
 	return (flags & kSCNetworkReachabilityFlagsReachable) &&
 			((flags & airplaneFlags) != airplaneFlags);
@@ -359,8 +409,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
 //	NSLog(@"Wanted to wait for loading for request: %@", loadingRequest);
-	
-	FYContentRequester *requester = [self contentRequesterForResourseLoader:resourceLoader];
+	FYContentRequester *requester = [self contentRequesterForURL:loadingRequest.request.URL];
 
 	BOOL didSatisfy = [self tryToSatisfyRequest:loadingRequest forRequester:requester];
 	
@@ -369,43 +418,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 		[self processAllPendingRequests];
 	}
 	
-	if (!requester.isStreamingFromCache) {
-		if (!requester.connection) {
-			NSURLRequest *request = [NSURLRequest requestWithURL:requester.originalURL];
-			requester.connection = [NSURLConnection connectionWithRequest:request
-																 delegate:self];
-		}
-	} else {
-		if (requester.mediaData.length == 0) {
-			requester.cachedFile.readabilityHandler = ^(NSFileHandle *fileHandle) {
-				NSData *readData = fileHandle.availableData;
-				[fileHandle closeFile];
-
-				dispatch_async(dispatch_get_main_queue(), ^{
-					requester.mediaData = [readData mutableCopy];
-					
-					[self processAllPendingRequests];					
-				});
-			};
-			
-			requester.metadataFile.readabilityHandler = ^(NSFileHandle *fileHandle) {
-				NSData *readData = fileHandle.availableData;
-				[fileHandle closeFile];
-				
-				dispatch_async(dispatch_get_main_queue(), ^{
-					requester.response = [NSKeyedUnarchiver unarchiveObjectWithData:readData];
-					
-					[self processAllPendingRequests];
-				});
-			};
-		}
-	}
-	
 	return YES;
 }
 
 - (void)resourceLoader:(AVAssetResourceLoader *)resourceLoader didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
-	FYContentRequester *requester = [self contentRequesterForResourseLoader:resourceLoader];
+	FYContentRequester *requester = [self contentRequesterForURL:loadingRequest.request.URL];
 	
 	[requester.pendingRequests removeObject:loadingRequest];
 }
@@ -413,48 +430,68 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-#ifdef DEPRECATED_FLOW
-	FYContentRequester *requester = [self contentRequesterConnection:connection];
-
-	requester.response = response;
-	
-	NSString *filename = [requester.originalURL.absoluteString lastPathComponent];
-	NSString *filenameMetadata = [filename stringByAppendingString:@"~meta"];
-	
-	requester.metadataFile = [[FYCachedStorage shared] cachedFileWithName:filenameMetadata];
-	
-	[requester.metadataFile writeData:[NSKeyedArchiver archivedDataWithRootObject:response]];
-	[requester.metadataFile closeFile];
-	
-	NSLog(@"Received response: %@", response);
-#else
-
-#endif
-	
+	NSLog(@"Response: %@", response);
 	// TODO: Move all code to private queue.
-//	FYContentRequester *requester = [self contentRequesterConnection:connection];
+	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 	
-	// Check if we already have cached file.
+	// TODO: In future version:
+	// Check if we already have cached file and if yes -> check if it's up-to date.
 	
+	// Store additional info.
+	if (!requester.response) {
+		requester.response = (NSHTTPURLResponse *)response;
+		
+		// Save response in metadata file.
+		NSString *metadataFilePath = [requester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
+		NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:response];
+		[metadataBytes writeToFile:metadataFilePath atomically:NO];
+	}
+	
+	requester.connectionDate = [NSDate date];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	FYContentRequester *requester = [self contentRequesterConnection:connection];
+	static int failer = 0;
 	
-	[requester.cachedFile writeData:data];
+	NSLog(@"%s", __FUNCTION__);
+	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
+	
 	[requester.mediaData appendData:data];
 	
 	[self processAllPendingRequests];
+	
+	failer++;
+	
+	if (failer == 10) {
+		NSLog(@"Will FAIL!");
+//		[connection cancel];
+//		[self connection:connection didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain
+//																		 code:0
+//																	 userInfo:@{NSLocalizedDescriptionKey : @"TEST"}]];
+	}
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 	NSLog(@"%s", __FUNCTION__);
 	[self processAllPendingRequests];
 	
-	FYContentRequester *requester = [self contentRequesterConnection:connection];
+	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
+
+	[requester.mediaData writeToFile:requester.cacheFilenamePath atomically:NO];
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+	NSLog(@"%s", __FUNCTION__);
+	// Save all gathered data to ~part file.
+	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
 	
-	// Synchronize file.
-	[requester.cachedFile closeFile];
+	NSString *partFilePath = [requester.cacheFilenamePath stringByAppendingString:@"~part"];
+	
+	if (requester.mediaData.length > 0) {
+		[requester.mediaData writeToFile:partFilePath atomically:NO];
+	}
+	
+	// TOOD: Invalidate
 }
 
 @end

@@ -20,17 +20,9 @@ AVAssetResourceLoaderDelegate
 
 + (instancetype)shared;
 
-- (void)startResourceLoadingFromURL:(NSURL *)url withResourceLoader:(AVAssetResourceLoader *)loader;
+- (void)startResourceLoadingFromURL:(NSURL *)url toCachedFilePath:(NSString *)cachedFilePath
+			withResourceLoader:(AVAssetResourceLoader *)loader;
+
 - (void)stopResourceLoadingFromURL:(NSURL *)url;
-
-/**
- *  Register asset that wants data.
- */
-- (void)registerAsset:(FYCachedURLAsset *)asset;
-
-/**
- *
- */
-- (void)unregisterAsset:(FYCachedURLAsset *)asset;
 
 @end
