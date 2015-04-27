@@ -41,7 +41,9 @@ UITableViewDataSource
 
 	[self setupDatasource];
 	
-	[FYContentProvider shared].ProgressBlock
+	[FYContentProvider shared].progressBlock = ^(NSInteger startOffset, NSInteger downloaded, NSInteger totalBytesToDownload) {
+		
+	};
 }
 
 #pragma mark - Callbacks
