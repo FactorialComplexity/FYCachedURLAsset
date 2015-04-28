@@ -19,6 +19,7 @@ NSURLConnectionDataDelegate
 
 @implementation FYCachedURLAsset {
 	NSURL *_originalURL;
+	NSString *_cachedFilePath;
 }
 
 #pragma mark - Init
@@ -26,26 +27,26 @@ NSURLConnectionDataDelegate
 + (instancetype)cachedURLAssetWithURL:(NSURL *)url
 						cacheFilePath:(NSString *)path {
 
-	FYCachedURLAsset *asset = [[self alloc] initWithURL:url
-									options:@{AVURLAssetReferenceRestrictionsKey : @(AVAssetReferenceRestrictionForbidAll)}];
-
+	FYCachedURLAsset *asset = [[self alloc] initWithURL:url cacheFilePath:path];
+	
 	[[FYContentProvider shared] startResourceLoadingFromURL:url toCachedFilePath:path withResourceLoader:asset.resourceLoader];
 	
 	return asset;
 }
 
-- (instancetype)initWithURL:(NSURL *)URL options:(NSDictionary *)options {
+- (instancetype)initWithURL:(NSURL *)URL cacheFilePath:(NSString *)path {
 	NSURL *customURL = [self modifySongURL:URL withCustomScheme:@"streaming"];
 	
-	if (self = [super initWithURL:customURL options:options]) {
+	if (self = [super initWithURL:customURL options:@{AVURLAssetReferenceRestrictionsKey : @(AVAssetReferenceRestrictionForbidAll)}]) {
 		_originalURL = URL;
+		_cachedFilePath = path;
 	}
 	
 	return self;
 }
 
 - (void)dealloc {
-	[[FYContentProvider shared] stopResourceLoadingFromURL:self.originalURL];
+	[[FYContentProvider shared] stopResourceLoadingFromURL:self.originalURL cachedFilePath:_cachedFilePath];
 }
 
 #pragma mark - Private

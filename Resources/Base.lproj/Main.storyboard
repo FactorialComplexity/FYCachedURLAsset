@@ -77,8 +77,8 @@
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TA8-ur-fMP">
-                                <rect key="frame" x="257" y="328" width="47" height="30"/>
-                                <state key="normal" title="+2 sec">
+                                <rect key="frame" x="257" y="328" width="55" height="30"/>
+                                <state key="normal" title="+10 sec">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
@@ -86,19 +86,24 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zug-VI-TGD">
-                                <rect key="frame" x="203" y="328" width="43" height="30"/>
-                                <state key="normal" title="-2 sec">
+                                <rect key="frame" x="203" y="328" width="52" height="30"/>
+                                <state key="normal" title="-10 sec">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
                                     <action selector="backwardClicked:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="8y3-m7-mhn"/>
                                 </connections>
                             </button>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="H8f-id-BSu" customClass="ProgressView">
+                                <rect key="frame" x="43" y="382" width="234" height="5"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
                     <connections>
+                        <outlet property="_progressView" destination="H8f-id-BSu" id="uTN-2L-AKf"/>
                         <outlet property="_timeLabel" destination="GCs-Ce-4bG" id="sWe-Me-YTJ"/>
                         <outlet property="_timeSlider" destination="AGp-zh-0cw" id="kQ9-HN-CHv"/>
                         <outlet property="_videoPlayerLayerView" destination="4Kk-DA-WuR" id="l4G-79-mMp"/>
@@ -106,7 +111,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-47" y="136"/>
+            <point key="canvasLocation" x="-81" y="136"/>
         </scene>
     </scenes>
 </document>

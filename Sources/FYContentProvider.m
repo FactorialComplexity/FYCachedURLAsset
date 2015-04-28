@@ -10,10 +10,89 @@
 #import "FYContentProvider.h"
 #import "FYCachedURLAsset.h"
 #import "FYCachedStorage.h"
+#import "FYDownloadSession.h"
 
 // Frameworks
 @import MobileCoreServices;
 @import SystemConfiguration;
+
+#pragma mark - FYResourceLoader
+
+@interface FYResourceLoader : NSObject
+
+@property (nonatomic) AVAssetResourceLoader *loader;
+@property (nonatomic) AVAssetResourceLoadingRequest *latestRequest;
+
+- (instancetype)initWithLoader:(AVAssetResourceLoader *)loader;
+
+@end
+
+@implementation FYResourceLoader
+
+- (instancetype)initWithLoader:(AVAssetResourceLoader *)loader {
+	if (self = [super init]) {
+		_loader = loader;
+	}
+	return self;
+}
+
+@end
+
+#pragma mark - FYCachedFileMeta
+
+@interface FYCachedFileMeta : NSObject
+<
+NSCoding
+>
+
+@property (nonatomic, readonly) NSString *etag;
+@property (nonatomic, readonly) NSString *mimeType;
+@property (nonatomic, readonly) NSInteger contentLength;
+
+- (instancetype)initWithResponse:(NSHTTPURLResponse *)response;
+
+@end
+
+@implementation FYCachedFileMeta
+
+#pragma mark - Init
+
+- (instancetype)initWithResponse:(NSHTTPURLResponse *)response {
+	if (self = [super init]) {
+		_etag = response.allHeaderFields[@"ETag"];
+		
+		CFStringRef contentType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType,
+																		(__bridge CFStringRef)(response.MIMEType),
+																		NULL);
+		_mimeType = CFBridgingRelease(contentType);
+
+		_contentLength = response.expectedContentLength;
+	}
+	
+	return self;
+}
+
+#pragma mark - NSCoding
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+	if (self = [super init]) {
+		_etag = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(etag))];
+		_mimeType = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(mimeType))];
+		_contentLength = [aDecoder decodeIntegerForKey:NSStringFromSelector(@selector(contentLength))];
+	}
+	
+	return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+	[aCoder encodeObject:_etag forKey:NSStringFromSelector(@selector(etag))];
+	[aCoder encodeObject:_mimeType forKey:NSStringFromSelector(@selector(mimeType))];
+	[aCoder encodeInteger:_contentLength forKey:NSStringFromSelector(@selector(contentLength))];
+}
+
+@end
+
+#pragma mark - FYContentRequester
 
 static NSTimeInterval const kMaximumWaitingTimeTreshold = 5.0f;
 
@@ -24,8 +103,6 @@ typedef enum {
 	kStreamingStateOnDemand
 } StreamingState;
 
-#pragma mark - FYContentRequester
-
 @interface FYContentRequester : NSObject
 
 /**
@@ -34,9 +111,25 @@ typedef enum {
 @property (nonatomic) StreamingState streamingState;
 
 /**
+ *  Download session associated with given requester.
+ */
+@property (nonatomic) FYDownloadSession *session;
+
+/**
  *  Original resource URL from which should be cached.
  */
 @property (nonatomic) NSURL *resourceURL;
+
+/**
+ *  Cache filename path to which data should be stored from resourceURL.
+ */
+@property (nonatomic) NSString *cacheFilenamePath;
+
+/**
+ *  Array of FYResourceLoader instances that contain resource loader and latest request for it. 
+ *	(They should be equal to total requesters count)
+ */
+@property (nonatomic) NSMutableArray *resourceLoaders;
 
 /**
  *  Total count of current requesters. Act like a reference counting mechanism.
@@ -46,59 +139,39 @@ typedef enum {
 @property (nonatomic) NSInteger totalRequestersCount;
 
 /**
- *  Total requests made from AVFoundation framework that are asking for media data.
- */
-@property (nonatomic) NSMutableArray *pendingRequests;
-
-/**
- *  Cache filename path to which data should be stored from resourceURL.
- */
-@property (nonatomic) NSString *cacheFilenamePath;
-
-/**
  *  Tells if current content provider is streaming data from local storage.
  */
 @property (nonatomic) BOOL isStreamingFromCache;
 
 /**
- *  Offset from the beggining of the file that is used when resuming download to approximate seeking time.
+ *  Media data that is gathered from cached file.
  */
-@property (nonatomic) NSInteger resumeDownloadingOffset;
+@property (nonatomic) NSData *localData;
 
 /**
- *  Raw media data that was fetched from given resource URL or from cached file.
+ *  Metadata file for given requester.
  */
-@property (nonatomic) NSMutableData *mediaData;
-
-/**
- *  Connection that has been established for downloading from given resource URL.
- */
-@property (nonatomic) NSURLConnection *connection;
-
-/**
- *  Response for given connection. Used to check is cached resource up-to date or to get mime type and length.
- */
-@property (nonatomic) NSHTTPURLResponse *response;
-
-/**
- *  Date on which connection has been established. It's used for seeking situation.
- *	By approximating how fast we will download till new time we decide to invalidate caching and restart request or to wait.
- */
-@property (nonatomic) NSDate *connectionDate;
+@property (nonatomic) FYCachedFileMeta *metadataFile;
 
 @end
 
 @implementation FYContentRequester
 
-- (instancetype)initWithURL:(NSURL *)resourceURL cacheFilePath:(NSString *)path {
+#pragma mark - Lifecycle
+
+- (instancetype)initWithURL:(NSURL *)resourceURL cacheFilePath:(NSString *)path resourceLoader:(AVAssetResourceLoader *)loader {
 	if (self = [super init]) {
-		_resourceURL = resourceURL;
+		_session = [[FYDownloadSession alloc] initWithURL:resourceURL];
 		_cacheFilenamePath = path;
 
-		_pendingRequests = [NSMutableArray new];
-		_mediaData = [NSMutableData new];
-		
+		_resourceURL = resourceURL;
+		_localData = [NSMutableData new];
+		_resourceLoaders = [NSMutableArray new];
+
 		_totalRequestersCount = 1;
+		
+		FYResourceLoader *resourceLoader = [[FYResourceLoader alloc] initWithLoader:loader];
+		[_resourceLoaders addObject:resourceLoader];
 	}
 	
 	return self;
@@ -116,8 +189,7 @@ typedef void (^FYReachabilityCallback) (BOOL isConnectedToTheInternet);
 
 @interface FYContentProvider ()
 <
-AVAssetResourceLoaderDelegate,
-NSURLConnectionDataDelegate
+AVAssetResourceLoaderDelegate
 >
 @end
 
@@ -187,18 +259,34 @@ NSURLConnectionDataDelegate
 	BOOL alreadyLoading = NO;
 	
 	for (FYContentRequester *requester in _contentRequesters) {
-		if ([requester.resourceURL isEqual:url]) {
+		// Allow multiple requesters ONLY if we're streaming from cache, because it's not stable to do that without fully loaded resource.
+		if ([requester.resourceURL isEqual:url] &&
+			[requester.cacheFilenamePath isEqualToString:cachedFilePath] &&
+			requester.isStreamingFromCache) {
+			
 			alreadyLoading = YES;
+			
 			requester.totalRequestersCount++;
+			
+			FYResourceLoader *resourceLoader = [[FYResourceLoader alloc] initWithLoader:loader];
+			[requester.resourceLoaders addObject:resourceLoader];
+			
 			break;
 		}
 	}
 	
-	NSLog(@"[ContentProvider]: Registering URL: %@. Already loading: %@", [url lastPathComponent], alreadyLoading ? @"YES" : @"NO");
+	NSLog(@"[ContentProvider]: Registering URL: %@->%@. Already loading: %@",
+		  [url lastPathComponent],
+		  cachedFilePath,
+		  alreadyLoading ? @"YES" : @"NO");
 	
 	if (!alreadyLoading) {
 		// We're not loading from given URL yet.
-		FYContentRequester *requester = [[FYContentRequester alloc] initWithURL:url cacheFilePath:cachedFilePath];
+		FYContentRequester *requester = [[FYContentRequester alloc] initWithURL:url cacheFilePath:cachedFilePath
+											resourceLoader:loader];
+		
+		// Setup callbacks for session.
+		[self setupCallbacksForRequester:requester];
 		
 		[_contentRequesters addObject:requester];
 		
@@ -209,9 +297,9 @@ NSURLConnectionDataDelegate
 			
 			// TODO: Implement this flow at the end (checking if cached version changed on server).
 			// For now simply check if we have cached file -> play it otherwise stream over internet.
-			void (^startFetchingBlock) (NSURLRequest *request) = ^(NSURLRequest *request) {
+			void (^startFetchingBlock) (NSInteger offset, NSString *etag) = ^(NSInteger offset, NSString *etag) {
 				if (isConnectedToTheInternet) {
-					[self startLoadingWithURLRequest:request forContentRequester:requester];
+					[requester.session startLoadingFromOffset:offset entityTag:etag];
 				} else {
 					NSLog(@"[Warning]: Isn't connected to the internet. Can't stream over it.");
 				}
@@ -226,28 +314,19 @@ NSURLConnectionDataDelegate
 			
 			if (metaFileExist && (cachedFileExist || tempCachedFileExist)) {
 				NSLog(@"[ContentProvider]: Got cached file!");
-				requester.response = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
-				requester.mediaData = [[NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath] mutableCopy];
+				requester.metadataFile = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
 				requester.isStreamingFromCache = cachedFileExist;
-				
+
+				requester.localData = [NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath];
+
 				if (!cachedFileExist) {
 					NSLog(@"[ContentProvider]: Cached file isn't fully downloaded!");
 					// Resume downloading non-fully cached file.
-					NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-					
-					NSString *etag = requester.response.allHeaderFields[@"ETag"];
-					NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.mediaData.length];
-					
-					if (etag.length > 0) {
-						[request setValue:etag forHTTPHeaderField:@"If-Range"];
-					}
-					
-					[request setValue:range forHTTPHeaderField:@"Range"];
-					startFetchingBlock(request);
+					startFetchingBlock(requester.localData.length, requester.metadataFile.etag);
 				}
 			} else {
 				NSLog(@"[ContentProvider]: Hasn't got cached files. Will download from scratch!");
-				startFetchingBlock([NSURLRequest requestWithURL:url]);
+				startFetchingBlock(0, nil);
 			}
 			
 // TODO:
@@ -263,21 +342,32 @@ NSURLConnectionDataDelegate
 	}
 }
 
-- (void)stopResourceLoadingFromURL:(NSURL *)url {
-	FYContentRequester *requester = [self contentRequesterForURL:url];
+- (void)stopResourceLoadingFromURL:(NSURL *)url cachedFilePath:(NSString *)cachedFilePath {
+	FYContentRequester *requester = [self contentRequesterForURL:url cachedFilePath:cachedFilePath];
 	
 	requester.totalRequestersCount--;
 
 	if (requester.totalRequestersCount == 0) {
-		for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
+		// Perform cleanup.
+		for (FYResourceLoader *loader in requester.resourceLoaders) {
 			// TODO: Fill with normal error.
-			[request finishLoadingWithError:[NSError errorWithDomain:NSCocoaErrorDomain
-																code:0
-															userInfo:nil]];
+			[loader.latestRequest finishLoadingWithError:[NSError errorWithDomain:NSCocoaErrorDomain
+																			 code:0
+																		 userInfo:nil]];
+			
+			[loader.loader setDelegate:nil queue:dispatch_get_main_queue()];
+			loader.latestRequest = nil;
+			loader.loader = nil;
 		}
 		
-		[requester.pendingRequests removeAllObjects];
-		[requester.connection cancel];
+		[requester.resourceLoaders removeAllObjects];
+		
+		requester.session.responseBlock = nil;
+		requester.session.chunkDownloadBlock = nil;
+		requester.session.successBlock = nil;
+		requester.session.failureBlock = nil;
+		
+		[requester.session cancelLoading];
 		
 		[_contentRequesters removeObject:requester];
 	}
@@ -292,27 +382,85 @@ NSURLConnectionDataDelegate
 	return [components URL];
 }
 
-- (FYContentRequester *)contentRequesterForURL:(NSURL *)url {
-	for (FYContentRequester *requester in _contentRequesters) {
-		NSURL *originalURL = [self modifySongURL:url withCustomScheme:requester.resourceURL.scheme];
-		
-		if ([requester.resourceURL isEqual:originalURL]) {
-			return requester;
+- (void)setupCallbacksForRequester:(FYContentRequester *)requester {
+	__typeof(requester) __weak weakRequester = requester;
+
+	requester.session.responseBlock = ^(NSHTTPURLResponse *response, BOOL *shouldContinueDownload) {
+		NSLog(@"Response: %@", response);
+		//	 TODO: In future version:
+		// Check if we already have cached file and if yes -> check if it's up-to date.
+		if (!weakRequester.metadataFile) {
+			FYCachedFileMeta *fileMeta = [[FYCachedFileMeta alloc] initWithResponse:response];
+			
+			weakRequester.metadataFile = fileMeta;
+			
+			// Save response in metadata file.
+			NSString *metadataFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
+			NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:fileMeta];
+			[metadataBytes writeToFile:metadataFilePath atomically:NO];
 		}
-	}
+		
+		[self processPendingRequestsForRequester:weakRequester];
+	};
 	
-	return nil;
+	requester.session.chunkDownloadBlock = ^(NSData *chunk) {
+		[self processPendingRequestsForRequester:weakRequester];
+		
+		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
+												   weakRequester.localData.length,
+												   weakRequester.session.downloadedData.length,
+												   weakRequester.metadataFile.contentLength);
+	};
+	
+	requester.session.successBlock = ^{
+		NSLog(@"Will save ? %@", (weakRequester.streamingState == kStreamingStateStreaming ? @"YES" : @"NO"));
+		
+		if (weakRequester.streamingState == kStreamingStateStreaming &&
+			(weakRequester.localData.length > 0 ||
+			weakRequester.session.downloadedData.length > 0)) {
+				NSMutableData *fullMediaData = [NSMutableData new];
+				
+				[fullMediaData appendData:weakRequester.localData];
+				[fullMediaData appendData:weakRequester.session.downloadedData];
+				[fullMediaData writeToFile:weakRequester.cacheFilenamePath atomically:NO];
+				
+				// Cleanup any temp files that may exist in case of resuming download.
+				NSString *tempFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
+				[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+		}
+		
+		[self processPendingRequestsForRequester:weakRequester];
+	};
+	
+	requester.session.failureBlock = ^(NSError *error) {
+		NSLog(@"Failure: %@", error);
+		
+		// Save all gathered data to ~part file.
+		if (weakRequester.streamingState == kStreamingStateStreaming &&
+			(weakRequester.localData.length > 0 ||
+			 weakRequester.session.downloadedData.length > 0)) {
+				
+				NSString *partFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:@"~part"];
+				NSMutableData *fullMediaData = [NSMutableData new];
+				
+				[fullMediaData appendData:weakRequester.localData];
+				[fullMediaData appendData:weakRequester.session.downloadedData];
+				
+				[fullMediaData writeToFile:partFilePath atomically:NO];
+		}
+		
+		// TOOD: Invalidate
+	};
 }
 
-- (void)processAllPendingRequests {
-	for (FYContentRequester *requester in _contentRequesters) {
-		NSLog(@"Got %d requests", (int32_t)requester.pendingRequests.count);
-
-		for (AVAssetResourceLoadingRequest *request in [requester.pendingRequests copy]) {
-			BOOL didSatisfyRequest = [self tryToSatisfyRequest:request forRequester:requester];
+- (void)processPendingRequestsForRequester:(FYContentRequester *)requester {
+	for (FYResourceLoader *loader in requester.resourceLoaders) {
+		if (loader.latestRequest) {
+			BOOL didSatisfy = [self tryToSatisfyRequest:loader.latestRequest forRequester:requester];
 			
-			if (didSatisfyRequest) {
-				[requester.pendingRequests removeObject:request];
+			if (didSatisfy) {
+				[loader.latestRequest finishLoading];
+				loader.latestRequest = nil;
 			}
 		}
 	}
@@ -329,13 +477,9 @@ NSURLConnectionDataDelegate
 	BOOL didRespondToDataRequest = request.dataRequest ? NO : YES;
 	
 	if (request.contentInformationRequest) {
-		if (requester.response) {
-			CFStringRef contentType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType,
-																			(__bridge CFStringRef)(requester.response.MIMEType),
-																			NULL);
-			
-			request.contentInformationRequest.contentType = CFBridgingRelease(contentType);
-			request.contentInformationRequest.contentLength = requester.response.expectedContentLength;
+		if (requester.metadataFile) {
+			request.contentInformationRequest.contentType = requester.metadataFile.mimeType;
+			request.contentInformationRequest.contentLength = requester.metadataFile.contentLength;
 			request.contentInformationRequest.byteRangeAccessSupported = YES;
 			
 			didRespondToInformationRequest = YES;
@@ -344,35 +488,103 @@ NSURLConnectionDataDelegate
 	
 	if (request.dataRequest) {
 		AVAssetResourceLoadingDataRequest *dataRequest = request.dataRequest;
-		NSData *availableData = requester.mediaData;
 		
-		if (dataRequest.currentOffset < requester.resumeDownloadingOffset) {
-			NSLog(@"[ContentProvider]: Couldn't satisfy request, because requested data is behind current download offset.");
-			return NO;
-		} else if (dataRequest.currentOffset <= availableData.length + requester.resumeDownloadingOffset) {
-			CGFloat bytesGot = availableData.length + requester.resumeDownloadingOffset - request.dataRequest.currentOffset;
-			CGFloat bytesToGive = MIN(bytesGot, dataRequest.requestedOffset + dataRequest.requestedLength - dataRequest.currentOffset);
+		if (requester.streamingState == kStreamingStateStreaming) {
+			NSInteger totalBytesGot = requester.localData.length + requester.session.downloadedData.length;
+
+			if (dataRequest.currentOffset < totalBytesGot) {
+				NSInteger bytesGot = totalBytesGot - dataRequest.currentOffset;
+				NSInteger bytesToGive = MIN(bytesGot, dataRequest.requestedOffset + dataRequest.requestedLength - dataRequest.currentOffset);
+				
+				NSRange chunkRange = (NSRange) {
+					dataRequest.currentOffset,
+					bytesToGive
+				};
+				
+				NSMutableData *availableData = [NSMutableData new];
+				[availableData appendData:requester.localData];
+				[availableData appendData:requester.session.downloadedData];
+				
+				[dataRequest respondWithData:[availableData subdataWithRange:chunkRange]];
+				
+				didRespondToDataRequest = bytesToGive > 0;
+			}
+		} else if (requester.streamingState == kStreamingStateOnDemand) {
+			NSInteger totalBytesGot = requester.session.offset + requester.session.downloadedData.length;
 			
-			NSRange requestedDataRange = (NSRange) {
-				request.dataRequest.currentOffset - requester.resumeDownloadingOffset,
-				bytesToGive
-			};
-			
-			[request.dataRequest respondWithData:[availableData subdataWithRange:requestedDataRange]];
-			
-			// If we gave something - we've responded to that request.
-			didRespondToDataRequest = bytesToGive > 0;
+			if (dataRequest.currentOffset >= requester.session.offset &&
+				dataRequest.currentOffset < totalBytesGot) {
+				
+				NSInteger bytesGot = totalBytesGot - dataRequest.currentOffset;
+				NSInteger bytesToGive = MIN(bytesGot, dataRequest.requestedOffset + dataRequest.requestedLength - dataRequest.currentOffset);
+				
+				NSRange chunkRange = (NSRange) {
+					dataRequest.currentOffset - requester.session.offset,
+					bytesToGive
+				};
+				
+				[dataRequest respondWithData:[requester.session.downloadedData subdataWithRange:chunkRange]];
+				
+				didRespondToDataRequest = bytesToGive > 0;
+			}
 		}
 	}
 	
 	if (didRespondToDataRequest && didRespondToInformationRequest) {
 		NSLog(@"Did handle request: %@", request.dataRequest);
-		[request finishLoading];
-		
 		return YES;
 	} else {
 		return NO;
 	}
+}
+
+#pragma mark - Accessors
+
+- (FYContentRequester *)contentRequesterForURL:(NSURL *)url cachedFilePath:(NSString *)path {
+	for (FYContentRequester *requester in _contentRequesters) {
+		NSURL *originalURL = [self modifySongURL:url withCustomScheme:requester.resourceURL.scheme];
+		
+		if ([requester.resourceURL isEqual:originalURL] &&
+			[requester.cacheFilenamePath isEqualToString:path]) {
+			return requester;
+		}
+	}
+	
+	return nil;
+}
+
+- (FYContentRequester *)contentRequesterForResourceLoader:(AVAssetResourceLoader *)loader {
+	for (FYContentRequester *requester in _contentRequesters) {
+		for (FYResourceLoader *resourceLoader in requester.resourceLoaders) {
+			if ([resourceLoader.loader isEqual:loader]) {
+				return requester;
+			}
+		}
+	}
+	
+	return nil;
+}
+
+- (FYResourceLoader *)fyResourceLoaderForLoader:(AVAssetResourceLoader *)loader {
+	for (FYContentRequester *requester in _contentRequesters) {
+		FYResourceLoader *candidate = [self fyResourceLoaderForLoader:loader forRequester:requester];
+		
+		if (candidate) {
+			return candidate;
+		}
+	}
+	
+	return nil;
+}
+
+- (FYResourceLoader *)fyResourceLoaderForLoader:(AVAssetResourceLoader *)loader forRequester:(FYContentRequester *)requester {
+	for (FYResourceLoader *resourceLoader in requester.resourceLoaders) {
+		if ([resourceLoader.loader isEqual:loader]) {
+			return resourceLoader;
+		}
+	}
+	
+	return nil;
 }
 
 - (NSString *)temporaryFileSuffix {
@@ -381,11 +593,6 @@ NSURLConnectionDataDelegate
 
 - (NSString *)metadataFileSuffix {
 	return @"~meta";
-}
-
-- (void)startLoadingWithURLRequest:(NSURLRequest *)request forContentRequester:(FYContentRequester *)requester {
-	requester.connection = [NSURLConnection connectionWithRequest:request delegate:self];
-	[requester.connection start];
 }
 
 #pragma mark - SCNetworkReachability
@@ -412,6 +619,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 
 	NSArray *waiters = [self->_networkReachableWaiters copy];
 	
+	NSLog(@"[ContentProvider]: Network state changed. Is connected? %@", [self isReachableWithFlags:flags] ? @"YES" : @"NO");
 	[self->_networkReachableWaiters removeAllObjects];
 	
 	for (FYReachabilityCallback reachabilityCallback in waiters) {
@@ -430,104 +638,73 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - AVAssetResourceLoaderDelegate
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-	NSLog(@"Wanted to wait for loading for request: %@", loadingRequest.dataRequest);
-	FYContentRequester *requester = [self contentRequesterForURL:loadingRequest.request.URL];
-
-	// Try to satisfy this request right now.
+	NSLog(@"Wanted to wait for loading request: %@", loadingRequest.dataRequest);
+	
+	FYContentRequester *requester = [self contentRequesterForResourceLoader:resourceLoader];
+	FYResourceLoader *loader = [self fyResourceLoaderForLoader:resourceLoader forRequester:requester];
+	
+	// We need to satisfy latest request right here right now.
+	if (loader.latestRequest) {
+		BOOL didSatisfy = [self tryToSatisfyRequest:loader.latestRequest forRequester:requester];
+		
+		if (didSatisfy) {
+			[loader.latestRequest finishLoading];
+		} else {
+			// TODO: Error
+			[loader.latestRequest finishLoadingWithError:nil];
+		}
+		
+		loader.latestRequest = nil;
+	}
+	
+	// Try to satisfy NEW request right now.
 	BOOL didSatisfy = [self tryToSatisfyRequest:loadingRequest forRequester:requester];
 	
-	if (!didSatisfy) {
-		// If we didn't satisfy request -> add it to pending request to process later.
-		[requester.pendingRequests addObject:loadingRequest];
-		// Process other pending requests that may now be satisfied.
-		[self processAllPendingRequests];
+	if (didSatisfy) {
+		[loadingRequest finishLoading];
+	} else {
+		// If we didn't satisfy request -> add it as pending request to process later.
+		loader.latestRequest = loadingRequest;
 		
-		// If we're not streaming from cache and we have active connection and loading request is asking for data then:
-		if (!requester.isStreamingFromCache && requester.connectionDate && loadingRequest.dataRequest) {
-			// If datax request is asking for data that we didn't have yet - calculate how much bytes we are from requested offset.
-			NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - (requester.mediaData.length + requester.resumeDownloadingOffset);
-			NSLog(@"KBytes to download: %d", (int32_t)bytesToDownload / 1024);
-			
-			if (bytesToDownload > 0) {
-				// Calculate average download speed and how much time we need to catch up with requested offset.
-				NSTimeInterval timePassed = -[requester.connectionDate timeIntervalSinceNow];
-				NSInteger totalBytesDownloaded = requester.mediaData.length;
-				
-				CGFloat bytesPerSecond = totalBytesDownloaded / timePassed;
-				
-				CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
-				NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
-				
-				if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
-					NSLog(@"[ContentProvider]: Will transite ON DEMAND state!");
-					requester.streamingState = kStreamingStateOnDemand;
-					
-					// Perform cleanup and several adjustments to fetch data from requested offset.
-					[requester.connection cancel];
-					requester.connection = nil;
-					requester.connectionDate = nil;
-					
-					for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
-						if (request != loadingRequest) {
-							[request finishLoadingWithError:nil];
-						}
-					}
-					
-					[requester.pendingRequests removeAllObjects];
-					[requester.pendingRequests addObject:loadingRequest];
-					requester.resumeDownloadingOffset = loadingRequest.dataRequest.requestedOffset;
-					[requester.mediaData setLength:0];
-					
-					// Build headers to request data from requested offset.
-					NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requester.resourceURL];
-					
-					NSString *etag = requester.response.allHeaderFields[@"ETag"];
-					NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.resumeDownloadingOffset];
-					
-					if (etag.length > 0) {
-						[request setValue:etag forHTTPHeaderField:@"If-Range"];
-					}
-					
-					[request setValue:range forHTTPHeaderField:@"Range"];
-
-					[self startLoadingWithURLRequest:request forContentRequester:requester];
-				} else {
-					NSLog(@"[ContentProvider]: Will wait %.2f seconds...", approximateTimeForSeeking);
-				}
-			} else if (requester.resumeDownloadingOffset > loadingRequest.dataRequest.requestedOffset) {
+		// TODO: This shouldn't work like that:
+		// If we're not streaming from cache and loading request is asking for data then:
+		if (!requester.isStreamingFromCache && loadingRequest.dataRequest) {
+			if (requester.session.offset > loadingRequest.dataRequest.requestedOffset) {
+				NSLog(@"[ContentProvider]: Resource loader is requesting data behind current session offset. Will transite to on-demand state.");
+				// We've requested data behind current session offset.
+				// Transite to on-demand state and resend request to server.
 				requester.streamingState = kStreamingStateOnDemand;
-
-				// Perform cleanup and several adjustments to fetch data from requested offset.
-				[requester.connection cancel];
-				requester.connection = nil;
-				requester.connectionDate = nil;
 				
-				for (AVAssetResourceLoadingRequest *request in requester.pendingRequests) {
-					if (request != loadingRequest) {
-						[request finishLoadingWithError:nil];
+				[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
+					entityTag:requester.metadataFile.etag];
+			} else {
+				NSInteger bytesDownloaded = requester.session.offset + requester.session.downloadedData.length;
+				NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - bytesDownloaded;
+				
+				if (bytesToDownload > 0) {
+					// If we got some bytes to download -> check how much time it'll take.
+					// If time > treshold value -> transite to on-demand state and begin fetching from requested offset.
+					
+					// Calculate average download speed and how much time we need to catch up with requested offset.
+					NSTimeInterval timePassed = -[requester.session.connectionDate timeIntervalSinceNow];
+					NSInteger totalBytesDownloaded = requester.session.downloadedData.length;
+					
+					CGFloat bytesPerSecond = totalBytesDownloaded / timePassed;
+					
+					CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
+					NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
+					
+					if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
+						NSLog(@"[ContentProvider]: Will transite ON DEMAND state!");
+						requester.streamingState = kStreamingStateOnDemand;
+						
+						[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
+							entityTag:requester.metadataFile.etag];
+					} else {
+						NSLog(@"[ContentProvider]: Will wait %.2f seconds...", approximateTimeForSeeking);
 					}
 				}
-				
-				[requester.pendingRequests removeAllObjects];
-				[requester.pendingRequests addObject:loadingRequest];
-				requester.resumeDownloadingOffset = loadingRequest.dataRequest.requestedOffset;
-				[requester.mediaData setLength:0];
-				
-				// Build headers to request data from requested offset.
-				NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requester.resourceURL];
-				
-				NSString *etag = requester.response.allHeaderFields[@"ETag"];
-				NSString *range = [NSString stringWithFormat:@"bytes=%lu-", (unsigned long)requester.resumeDownloadingOffset];
-				
-				if (etag.length > 0) {
-					[request setValue:etag forHTTPHeaderField:@"If-Range"];
-				}
-				
-				[request setValue:range forHTTPHeaderField:@"Range"];
-				
-				[self startLoadingWithURLRequest:request forContentRequester:requester];
 			}
-
 		}
 	}
 
@@ -535,95 +712,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 }
 
 - (void)resourceLoader:(AVAssetResourceLoader *)resourceLoader didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
-	FYContentRequester *requester = [self contentRequesterForURL:loadingRequest.request.URL];
+	FYResourceLoader *loader = [self fyResourceLoaderForLoader:resourceLoader];
 	
-	[requester.pendingRequests removeObject:loadingRequest];
-}
-
-#pragma mark - NSURLConnectionDataDelegate
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	// TODO: Rework this logic. 206 means partial content, but in my case it gave me full content from specified range.
-	// Maybe it can return not full range, needs testing.
-	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-	NSLog(@"Response: %@", httpResponse);
-	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
-	
-	//	 TODO: In future version:
-	// Check if we already have cached file and if yes -> check if it's up-to date.
-	
-	if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
-		// Store additional info.
-		if (!requester.response) {
-			requester.response = httpResponse;
-			
-			// Save response in metadata file.
-			NSString *metadataFilePath = [requester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
-			NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:response];
-			[metadataBytes writeToFile:metadataFilePath atomically:NO];
-		}
-		
-		requester.connectionDate = [NSDate date];
-		
-		[self processAllPendingRequests];
-	} else {
-		NSLog(@"Will cancel connection!");
-		[connection cancel];
-		
-		// TODO: Invalidate.
+	if ([loader.latestRequest isEqual:loadingRequest]) {
+		loader.latestRequest = nil;
 	}
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	static int failer = 0;
-	
-	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
-	
-	[requester.mediaData appendData:data];
-	
-	NSLog(@"%d/%d KB", (int32_t)requester.mediaData.length / 1024 + requester.resumeDownloadingOffset / 1024, (int32_t)requester.response.expectedContentLength / 1024);
-	
-	[self processAllPendingRequests];
-	
-	failer++;
-	
-	if (failer == 10) {
-		NSLog(@"Will FAIL!");
-//		[connection cancel];
-//		[self connection:connection didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain
-//																		 code:0
-//																	 userInfo:@{NSLocalizedDescriptionKey : @"TEST"}]];
-	}
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	NSLog(@"%s", __FUNCTION__);
-	[self processAllPendingRequests];
-	
-	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
-
-	if (requester.streamingState == kStreamingStateStreaming) {
-		[requester.mediaData writeToFile:requester.cacheFilenamePath atomically:NO];
-		
-		// Cleanup any temp files that may exist in case of resuming download.
-		NSString *tempFilePath = [requester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
-		[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
-	}
-}
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	NSLog(@"%s", __FUNCTION__);
-	// Save all gathered data to ~part file.
-	FYContentRequester *requester = [self contentRequesterForURL:connection.originalRequest.URL];
-
-	if (requester.mediaData.length > 0 && requester.streamingState == kStreamingStateStreaming) {
-		
-		NSString *partFilePath = [requester.cacheFilenamePath stringByAppendingString:@"~part"];
-
-		[requester.mediaData writeToFile:partFilePath atomically:NO];
-	}
-	
-	// TOOD: Invalidate
 }
 
 @end
