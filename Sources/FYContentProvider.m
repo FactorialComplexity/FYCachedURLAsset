@@ -9,7 +9,6 @@
 // Model
 #import "FYContentProvider.h"
 #import "FYCachedURLAsset.h"
-#import "FYCachedStorage.h"
 #import "FYDownloadSession.h"
 
 // Frameworks
@@ -185,6 +184,14 @@ typedef enum {
 
 #pragma mark - FYContentProvider
 
+#define DEBUG_CONTENT_PROVIDER 1
+
+#if DEBUG_CONTENT_PROVIDER
+#define NSLog(format, ...) NSLog(format, ##__VA_ARGS__)
+#else
+#define NSLog(format, ...)
+#endif
+
 typedef void (^FYReachabilityCallback) (BOOL isConnectedToTheInternet);
 
 @interface FYContentProvider ()
@@ -197,8 +204,6 @@ AVAssetResourceLoaderDelegate
 	// Reachability related.
 	SCNetworkReachabilityRef _reachability;
 	SCNetworkReachabilityFlags _latestReachabilityFlags;
-	// General callback for reachability.
-	FYReachabilityCallback _reachabilityCallback;
 	// Callbacks that need to know current network status.
 	NSMutableArray *_networkReachableWaiters;
 	
@@ -218,7 +223,7 @@ AVAssetResourceLoaderDelegate
 	return manager;
 }
 
-#pragma mark - Init
+#pragma mark - Lifecycle
 
 - (instancetype)init {
 	if (self = [super init]) {
@@ -233,12 +238,6 @@ AVAssetResourceLoaderDelegate
 		
 		SCNetworkReachabilitySetCallback(_reachability, NetworkReachabilityCallBack, &ctx);
 		SCNetworkReachabilityScheduleWithRunLoop(_reachability, CFRunLoopGetMain(), (CFStringRef)NSRunLoopCommonModes);
-		
-		_reachabilityCallback = ^(BOOL isReachable) {
-			if (!isReachable) {
-				// TODO: Invalidate everything
-			}
-		};
 	}
 	return self;
 }
@@ -294,17 +293,6 @@ AVAssetResourceLoaderDelegate
 			// 1. If we have internet connection & cached version -> check on server is cached version is up-to date.
 			// 2. If we have internet connection & !cached version -> create temp file and download data into it.
 			// 3. If we don't have internet connection -> check for cached version on disk. If it's present -> play it.
-			
-			// TODO: Implement this flow at the end (checking if cached version changed on server).
-			// For now simply check if we have cached file -> play it otherwise stream over internet.
-			void (^startFetchingBlock) (NSInteger offset, NSString *etag) = ^(NSInteger offset, NSString *etag) {
-				if (isConnectedToTheInternet) {
-					[requester.session startLoadingFromOffset:offset entityTag:etag];
-				} else {
-					NSLog(@"[Warning]: Isn't connected to the internet. Can't stream over it.");
-				}
-			};
-			
 			NSString *metaFilePath = [cachedFilePath stringByAppendingString:[self metadataFileSuffix]];
 			NSString *tempFilePath = [cachedFilePath stringByAppendingString:[self temporaryFileSuffix]];
 			
@@ -312,32 +300,57 @@ AVAssetResourceLoaderDelegate
 			BOOL metaFileExist = [[NSFileManager defaultManager] fileExistsAtPath:metaFilePath];
 			BOOL tempCachedFileExist = [[NSFileManager defaultManager] fileExistsAtPath:tempFilePath];
 			
+			void (^streamFromCacheBlock) () = ^{
+				requester.isStreamingFromCache = cachedFileExist;
+				requester.localData = [NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath];
+				
+				if (!cachedFileExist) {
+					NSLog(@"[ContentProvider]: Cached file isn't fully downloaded!");
+					if (isConnectedToTheInternet) {
+						// Note: isConnected may be not correct, but NSURLConnection will simply fail.
+						[requester.session startLoadingFromOffset:requester.localData.length entityTag:requester.metadataFile.etag];
+					}
+				}
+				
+				// This invocation is async, so AVFoundation may ask us for data.
+				[self processPendingRequestsForRequester:requester];
+			};
+
 			if (metaFileExist && (cachedFileExist || tempCachedFileExist)) {
 				NSLog(@"[ContentProvider]: Got cached file!");
 				requester.metadataFile = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
-				requester.isStreamingFromCache = cachedFileExist;
 
-				requester.localData = [NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath];
-
-				if (!cachedFileExist) {
-					NSLog(@"[ContentProvider]: Cached file isn't fully downloaded!");
-					// Resume downloading non-fully cached file.
-					startFetchingBlock(requester.localData.length, requester.metadataFile.etag);
+				if (isConnectedToTheInternet) {
+					NSLog(@"[ContentProvider]: Will check is cached file is up-to date.");
+					// Check is cached file is up-to date.
+					[requester.session fetchEntityTagForResourceWithSuccess:^(NSString *etag) {
+						if ([etag isEqualToString:requester.metadataFile.etag]) {
+							// Everything is ok, simply play file from cache.
+							NSLog(@"[ContentProvider]: Cached file is up-to date!");
+							streamFromCacheBlock();
+						} else {
+							// File changed on server, redownload it.
+							NSLog(@"[ContentProvider]: Cached file is out of date! Will download new!");
+							[requester.session startLoadingFromOffset:0 entityTag:nil];
+						}
+					} failure:^(NSError *error) {
+						NSLog(@"[ContentProvider]: Failed to check is cached file is up-to date with error: %@", error);
+						// Stream file that we currently have.
+						streamFromCacheBlock();
+					}];
+				} else {
+					NSLog(@"[ContentProvider]: Hasn't got internet connection, can't change is resource up-to date. Will stream from cached file.");
+					streamFromCacheBlock();
 				}
 			} else {
+				// Simply start downloading from beggining.
 				NSLog(@"[ContentProvider]: Hasn't got cached files. Will download from scratch!");
-				startFetchingBlock(0, nil);
+				if (isConnectedToTheInternet) {
+					[requester.session startLoadingFromOffset:0 entityTag:nil];
+				} else {
+					NSLog(@"[Warning]: Isn't connected to the internet. Can't stream anything.");
+				}
 			}
-			
-// TODO:
-//			if (isConnectedToTheInternet) {
-//				NSURLRequest *request = [NSURLRequest requestWithURL:url];
-//				requester.connection = [NSURLConnection connectionWithRequest:request delegate:self];
-//				[requester.connection start];
-//			} else {
-//				 Find cached version of file, otherwise we can't do anything here.
-//
-//			}
 		}];
 	}
 }
@@ -366,6 +379,7 @@ AVAssetResourceLoaderDelegate
 		requester.session.chunkDownloadBlock = nil;
 		requester.session.successBlock = nil;
 		requester.session.failureBlock = nil;
+		requester.session.resourceChangedBlock = nil;
 		
 		[requester.session cancelLoading];
 		
@@ -385,20 +399,16 @@ AVAssetResourceLoaderDelegate
 - (void)setupCallbacksForRequester:(FYContentRequester *)requester {
 	__typeof(requester) __weak weakRequester = requester;
 
-	requester.session.responseBlock = ^(NSHTTPURLResponse *response, BOOL *shouldContinueDownload) {
+	requester.session.responseBlock = ^(NSHTTPURLResponse *response) {
 		NSLog(@"Response: %@", response);
-		//	 TODO: In future version:
-		// Check if we already have cached file and if yes -> check if it's up-to date.
-		if (!weakRequester.metadataFile) {
-			FYCachedFileMeta *fileMeta = [[FYCachedFileMeta alloc] initWithResponse:response];
-			
-			weakRequester.metadataFile = fileMeta;
-			
-			// Save response in metadata file.
-			NSString *metadataFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
-			NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:fileMeta];
-			[metadataBytes writeToFile:metadataFilePath atomically:NO];
-		}
+		FYCachedFileMeta *fileMeta = [[FYCachedFileMeta alloc] initWithResponse:response];
+		
+		weakRequester.metadataFile = fileMeta;
+		
+		// Save response in metadata file.
+		NSString *metadataFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self metadataFileSuffix]];
+		NSData *metadataBytes = [NSKeyedArchiver archivedDataWithRootObject:fileMeta];
+		[metadataBytes writeToFile:metadataFilePath atomically:NO];
 		
 		[self processPendingRequestsForRequester:weakRequester];
 	};
@@ -406,10 +416,11 @@ AVAssetResourceLoaderDelegate
 	requester.session.chunkDownloadBlock = ^(NSData *chunk) {
 		[self processPendingRequestsForRequester:weakRequester];
 		
-		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
-												   weakRequester.localData.length,
-												   weakRequester.session.downloadedData.length,
-												   weakRequester.metadataFile.contentLength);
+		// Testing.
+//		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
+//												   weakRequester.localData.length,
+//												   weakRequester.session.downloadedData.length,
+//												   weakRequester.metadataFile.contentLength);
 	};
 	
 	requester.session.successBlock = ^{
@@ -450,6 +461,14 @@ AVAssetResourceLoaderDelegate
 		}
 		
 		// TOOD: Invalidate
+	};
+	
+	requester.session.resourceChangedBlock = ^{
+		// Resource changed. We need to invalidate.
+		[[NSNotificationCenter defaultCenter] postNotificationName:FYResourceForURLChangedNotificationName
+			object:weakRequester.resourceURL];
+		
+		// TODO: Invalidate:
 	};
 }
 
@@ -615,7 +634,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 	FYContentProvider *self = (__bridge FYContentProvider *)(info);
 	
 	self->_latestReachabilityFlags = flags;
-	!self->_reachabilityCallback ? : self->_reachabilityCallback([self isReachableWithFlags:flags]);
 
 	NSArray *waiters = [self->_networkReachableWaiters copy];
 	

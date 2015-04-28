@@ -10,6 +10,8 @@
 #import "FYCachedURLAsset.h"
 #import "FYContentProvider.h"
 
+NSString *const FYResourceForURLChangedNotificationName = @"FYResourceForURLChangedNotification";
+
 @interface FYCachedURLAsset ()
 <
 AVAssetResourceLoaderDelegate,

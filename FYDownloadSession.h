@@ -8,10 +8,12 @@
 
 @import Foundation;
 
-typedef void (^FYResponseBlock) (NSHTTPURLResponse *response, BOOL *shouldContinueDownload);
+typedef void (^FYResponseBlock) (NSHTTPURLResponse *response);
 typedef void (^FYChunkDownloadBlock) (NSData *chunk);
 typedef void (^FYSuccessBlock) ();
+typedef void (^FYSuccessWithETagBlock) (NSString *etag);
 typedef void (^FYFailureBlock) (NSError *error);
+typedef void (^FYResourceChangedBlock) ();
 
 @interface FYDownloadSession : NSObject
 
@@ -61,16 +63,34 @@ typedef void (^FYFailureBlock) (NSError *error);
 @property (nonatomic, copy) FYFailureBlock failureBlock;
 
 /**
+ *  Block that is called when resource changed for given URL.
+ */
+@property (nonatomic, copy) FYResourceChangedBlock resourceChangedBlock;
+
+/**
  *  Creates download session with given URL.
  */
 - (instancetype)initWithURL:(NSURL *)url;
 
 /**
+ *  Fetches etag for given resource URL with provided callbacks
+ */
+- (void)fetchEntityTagForResourceWithSuccess:(FYSuccessWithETagBlock)success
+									 failure:(FYFailureBlock)failure;
+
+/**
+ *  Starts loading content from beggining.
+ */
+- (void)startLoading;
+
+/**
  *  Begins loading content from given URL from supplied offset for specific entity.
  *	If loading is currently in progress -> it will be restarted.
  */
+- (void)continueLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)tag;
+
 - (void)startLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)etag;
-- (void)startLoadingFrom:(NSInteger)from to:(NSInteger)to entityTag:(NSString *)etag;
+- (void)startLoadingFrom:(NSInteger)from to:(NSInteger)to entityTag:(NSString *)etag; // TODO: Not integrated/tested.
 - (void)cancelLoading;
 
 @end

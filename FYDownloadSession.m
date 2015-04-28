@@ -85,6 +85,47 @@ NSURLConnectionDataDelegate
 	_connectionDate = nil;
 }
 
+#pragma mark - Public
+
+- (void)fetchEntityTagForResourceWithSuccess:(FYSuccessWithETagBlock)success failure:(FYFailureBlock)failure {
+	NSMutableURLRequest *headRequest = [NSMutableURLRequest requestWithURL:self.resourceURL];
+	headRequest.cachePolicy = NSURLRequestReloadIgnoringCacheData;
+
+	headRequest.HTTPMethod = @"HEAD";
+	
+	[NSURLConnection sendAsynchronousRequest:headRequest queue:[NSOperationQueue new]
+		completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+			// We've requested head, so data won't be filled in.
+			if (!connectionError) {
+				NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+				
+				if (httpResponse.statusCode >= 200 && httpResponse.statusCode < 300) {
+					dispatch_async(dispatch_get_main_queue(), ^{
+						!success ? : success(httpResponse.allHeaderFields[@"ETag"]);
+					});
+				} else {
+					NSString *localizedDescription = [NSHTTPURLResponse localizedStringForStatusCode:httpResponse.statusCode];
+					
+					if (!localizedDescription) {
+						localizedDescription = @"Unknown error";
+					}
+					
+					NSError *localizedError = [NSError errorWithDomain:NSCocoaErrorDomain
+																  code:httpResponse.statusCode
+															  userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
+					
+					dispatch_async(dispatch_get_main_queue(), ^{
+						!failure ? : failure(localizedError);
+					});
+				}
+			} else {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					!failure ? : failure(connectionError);
+				});
+			}
+	}];
+}
+
 #pragma mark - NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
@@ -95,11 +136,16 @@ NSURLConnectionDataDelegate
 		_response = (NSHTTPURLResponse *)response;
 		_connectionDate = [NSDate date];
 		
-		BOOL shouldContinueDownload = YES;
-		!self.responseBlock ? : self.responseBlock(_response, &shouldContinueDownload);
+		!self.responseBlock ? : self.responseBlock(_response);
 	} else {
-		// TODO: Call failure block?
 		[connection cancel];
+		
+		// TODO: More introspection. We should build error for status codes that are not included in 200-299 range
+		NSString *localizedDescription = [NSHTTPURLResponse localizedStringForStatusCode:httpResponse.statusCode];
+		NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:httpResponse.statusCode
+										 userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
+		
+		!self.failureBlock ? : self.failureBlock(error);
 	}	
 }
 
@@ -111,7 +157,7 @@ NSURLConnectionDataDelegate
 	static int failer = 0;
 	failer++;
 	if (failer == 10) {
-		NSLog(@"Will FAIL!");
+//		NSLog(@"Will FAIL!");
 //		[connection cancel];
 //		[self connection:connection didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain
 //																		 code:0
@@ -120,12 +166,10 @@ NSURLConnectionDataDelegate
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	NSLog(@"%s", __FUNCTION__);
 	!self.successBlock ? : self.successBlock();
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	NSLog(@"%s", __FUNCTION__);
 	!self.failureBlock ? : self.failureBlock(error);
 }
 

@@ -12,7 +12,6 @@
 // Model
 #import "FYCachedURLAsset.h"
 #import "FYContentProvider.h"
-#import "FYCachedStorage.h"
 
 // Views
 #import "ProgressView.h"
@@ -45,14 +44,15 @@ UITableViewDataSource
 
 	[self setupDatasource];
 	
-	[FYContentProvider shared].progressBlock = ^(NSInteger startOffset, NSInteger localPresented, NSInteger downloaded, NSInteger totalBytesToDownload) {
-		_progressView.locallyPresented = localPresented;
-		_progressView.startOffsetProgress = startOffset;
-		_progressView.currentProgress = downloaded;
-		_progressView.totalProgress = totalBytesToDownload;
-		
-		[_progressView flush];
-	};
+//	[FYContentProvider shared].progressBlock = ^(NSInteger startOffset, NSInteger localPresented, NSInteger downloaded, NSInteger totalBytesToDownload) {
+//		_progressView.locallyPresented = localPresented;
+//		_progressView.startOffsetProgress = startOffset;
+//		_progressView.currentProgress = downloaded;
+//		_progressView.totalProgress = totalBytesToDownload;
+//		
+//		[_progressView flush];
+//	};
+	_progressView.hidden = YES;
 }
 
 #pragma mark - Callbacks
@@ -143,6 +143,7 @@ UITableViewDataSource
 						@{@"name" : @"Spaceman", @"url" : @"https://psv4.vk.me/c521114/u159894783/audios/39b74ba982cb.mp3?extra=haTJfDeJbAPUwzmSc9IvgFezygpXGwE_VKMiV2lRz006rs5hfEr8nSQMU4KA8MT7_nuU3l24WpwCbLdMawH53VFg0T4q-O4?/Hardwell%20@%20Ultra%20Music%20Festival%202013%20-%20Hardwell%20-%20Spaceman%20(Aino%20Rework%20Intro%20Edit)%20%3E%20vk.com/clubmusicit.mp3"},
 						@{@"name" : @"Song #2", @"url" : @"https://cs7-1v4.vk-cdn.net/p10/0f0773d66fe87c.mp3?extra=J7WbEf8sjA_O3eke_mrbaqMUVUd2h_OIbKmaDRLMlQ-QdGfYKhAl-3ZFEjaZ-fDN7jWE6D2nBvUSR-usKCtVkvtd4oQrv-c?/The%20Ting%20Tings%20-%20That%27s%20Not%20My%20Name.mp3"},
 						@{@"name" : @"Video", @"url" : @"http://hmmb-staging.s3.amazonaws.com/the_world_before_video-768px.mp4"},
+						@{@"name" : @"Outdated resource", @"url" : @"http://hmmb-staging.s3.amazonaws.com/test_audio.mp3"}
 						];
 }
 
@@ -158,7 +159,14 @@ UITableViewDataSource
 	
 	cell.mediaName = meta[@"name"];
 	cell.mediaURL = meta[@"url"];
-	cell.isCached = [[FYCachedStorage shared] cachedFileExistWithName:[cell.mediaURL lastPathComponent]];
+	
+	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+																   NSUserDomainMask,
+																   YES) firstObject];
+	NSString *cacheFileName = [NSString stringWithFormat:@"test%d.%@", (int32_t)indexPath.row, [meta[@"url"] pathExtension]];
+	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
+
+	cell.isCached = [[NSFileManager defaultManager] fileExistsAtPath:cacheFilePath];
 	
 	return cell;
 }
