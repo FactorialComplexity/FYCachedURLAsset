@@ -48,7 +48,7 @@ NSCoding
 @property (nonatomic, readonly) NSString *mimeType;
 @property (nonatomic, readonly) NSInteger contentLength;
 
-- (instancetype)initWithResponse:(NSHTTPURLResponse *)response;
+- (instancetype)initWithResponse:(NSHTTPURLResponse *)response fromSession:(FYDownloadSession *)session;
 
 @end
 
@@ -56,7 +56,7 @@ NSCoding
 
 #pragma mark - Init
 
-- (instancetype)initWithResponse:(NSHTTPURLResponse *)response {
+- (instancetype)initWithResponse:(NSHTTPURLResponse *)response fromSession:(FYDownloadSession *)session {
 	if (self = [super init]) {
 		_etag = response.allHeaderFields[@"ETag"];
 		
@@ -64,8 +64,8 @@ NSCoding
 																		(__bridge CFStringRef)(response.MIMEType),
 																		NULL);
 		_mimeType = CFBridgingRelease(contentType);
-
-		_contentLength = response.expectedContentLength;
+		
+		_contentLength = response.expectedContentLength + session.offset;
 	}
 	
 	return self;
@@ -424,7 +424,7 @@ AVAssetResourceLoaderDelegate
 
 	requester.session.responseBlock = ^(NSHTTPURLResponse *response) {
 		NSLog(@"Response: %@", response);
-		FYCachedFileMeta *fileMeta = [[FYCachedFileMeta alloc] initWithResponse:response];
+		FYCachedFileMeta *fileMeta = [[FYCachedFileMeta alloc] initWithResponse:response fromSession:weakRequester.session];
 		
 		weakRequester.metadataFile = fileMeta;
 		
@@ -440,10 +440,10 @@ AVAssetResourceLoaderDelegate
 		[self processPendingRequestsForRequester:weakRequester];
 		
 //		 Testing.
-//		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
-//												   weakRequester.localData.length,
-//												   weakRequester.session.downloadedData.length,
-//												   weakRequester.metadataFile.contentLength);
+		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
+												   weakRequester.localData.length,
+												   weakRequester.session.downloadedData.length,
+												   weakRequester.metadataFile.contentLength);
 	};
 	
 	requester.session.successBlock = ^{

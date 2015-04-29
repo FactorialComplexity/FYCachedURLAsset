@@ -175,7 +175,7 @@ NSURLConnectionDataDelegate
 	// TODO: Emulating failure.
 //	static int failer = 0;
 //	failer++;
-//	if (failer == 10) {
+//	if (failer == 15) {
 //		NSLog(@"Will FAIL!");
 //		[connection cancel];
 //		[self connection:connection didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain
