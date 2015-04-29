@@ -9,6 +9,7 @@
 @import AVFoundation;
 
 extern NSString *const FYResourceForURLChangedNotificationName;
+extern NSString *const FYResourceForURLDoesntExistNotificationName;
 
 @interface FYCachedURLAsset : AVURLAsset
 

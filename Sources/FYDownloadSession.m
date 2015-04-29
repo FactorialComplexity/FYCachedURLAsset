@@ -124,12 +124,12 @@ NSURLConnectionDataDelegate
 															  userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
 					
 					dispatch_async(dispatch_get_main_queue(), ^{
-						!failure ? : failure(localizedError);
+						!failure ? : failure(localizedError, httpResponse.statusCode);
 					});
 				}
 			} else {
 				dispatch_async(dispatch_get_main_queue(), ^{
-					!failure ? : failure(connectionError);
+					!failure ? : failure(connectionError, 0);
 				});
 			}
 	}];
@@ -163,7 +163,7 @@ NSURLConnectionDataDelegate
 		NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:httpResponse.statusCode
 										 userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
 		
-		!self.failureBlock ? : self.failureBlock(error);
+		!self.failureBlock ? : self.failureBlock(error, httpResponse.statusCode);
 	}	
 }
 
@@ -189,7 +189,7 @@ NSURLConnectionDataDelegate
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	!self.failureBlock ? : self.failureBlock(error);
+	!self.failureBlock ? : self.failureBlock(error, 0);
 }
 
 @end

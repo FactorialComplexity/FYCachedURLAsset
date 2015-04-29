@@ -192,7 +192,7 @@ AVAssetResourceLoaderDelegate
 							
 							[requester.session startLoadingFromOffset:0 entityTag:nil];
 						}
-					} failure:^(NSError *error) {
+					} failure:^(NSError *error, NSInteger statusCode) {
 						NSLog(@"[ContentProvider]: Failed to check is cached file is up-to date with error: %@", error);
 						// Stream file that we currently have.
 						streamFromCacheBlock();
@@ -220,6 +220,8 @@ AVAssetResourceLoaderDelegate
 	requester.totalRequestersCount--;
 
 	if (requester.totalRequestersCount == 0) {
+		// TODO: Maybe save currently gathered data into ~part file?
+		
 		// Perform cleanup.
 		for (FYResourceLoader *loader in requester.resourceLoaders) {
 			// TODO: Fill with normal error.
@@ -302,8 +304,13 @@ AVAssetResourceLoaderDelegate
 		[self processPendingRequestsForRequester:weakRequester];
 	};
 	
-	requester.session.failureBlock = ^(NSError *error) {
-		NSLog(@"Failure: %@", error);
+	requester.session.failureBlock = ^(NSError *error, NSInteger statusCode) {
+		NSLog(@"Failure: %@. Status code: %d", error, statusCode);
+		
+		if (statusCode == 404) {
+			[[NSNotificationCenter defaultCenter] postNotificationName:FYResourceForURLDoesntExistNotificationName
+																object:weakRequester.resourceURL];
+		}
 		
 		// Save all gathered data to ~part file.
 		if (weakRequester.streamingState == kStreamingStateStreaming &&
@@ -451,7 +458,13 @@ AVAssetResourceLoaderDelegate
 	}
 	
 	if (didRespondToDataRequest && didRespondToInformationRequest) {
-		NSLog(@"Did handle request: %@", request.dataRequest);
+		NSLog(@"Did handle loading request. Requesting content info: %@. Requesting data: %@. Data request range: %.3f - %.3f MB. Request was provided with %.3f MBytes.",
+			  request.contentInformationRequest ? @"YES" : @"NO",
+			  request.dataRequest ? @"YES" : @"NO",
+			  (float)request.dataRequest.requestedOffset / (1024 * 1024),
+			  (float)(request.dataRequest.requestedOffset + request.dataRequest.requestedLength) / (1024 * 1024),
+			  (float)(request.dataRequest.currentOffset - request.dataRequest.requestedOffset) / (1024 * 1024));
+
 		return YES;
 	} else {
 		return NO;
@@ -557,7 +570,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 #pragma mark - AVAssetResourceLoaderDelegate
 
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-	NSLog(@"Wanted to wait for loading request: %@", loadingRequest.dataRequest);
+	NSLog(@"Received loading request. Requesting content info: %@. Requesting data: %@. Data request range: %.3f - %.3f MB",
+		  loadingRequest.contentInformationRequest ? @"YES" : @"NO",
+		  loadingRequest.dataRequest ? @"YES" : @"NO",
+		  (float)loadingRequest.dataRequest.requestedOffset / (1024 * 1024),
+		  (float)(loadingRequest.dataRequest.requestedOffset + loadingRequest.dataRequest.requestedLength) / (1024 * 1024));
 	
 	FYContentRequester *requester = [self contentRequesterForResourceLoader:resourceLoader];
 	FYResourceLoader *loader = [self fyResourceLoaderForLoader:resourceLoader forRequester:requester];

@@ -11,6 +11,7 @@
 #import "FYContentProvider.h"
 
 NSString *const FYResourceForURLChangedNotificationName = @"FYResourceForURLChangedNotification";
+NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURLDoesntExistNotification";
 
 @interface FYCachedURLAsset ()
 <

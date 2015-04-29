@@ -12,7 +12,7 @@ typedef void (^FYResponseBlock) (NSHTTPURLResponse *response);
 typedef void (^FYChunkDownloadBlock) (NSData *chunk);
 typedef void (^FYSuccessBlock) ();
 typedef void (^FYSuccessWithETagBlock) (NSString *etag);
-typedef void (^FYFailureBlock) (NSError *error);
+typedef void (^FYFailureBlock) (NSError *error, NSInteger statusCode);
 typedef void (^FYResourceChangedBlock) ();
 
 @interface FYDownloadSession : NSObject
@@ -58,7 +58,7 @@ typedef void (^FYResourceChangedBlock) ();
 @property (nonatomic, copy) FYSuccessBlock successBlock;
 
 /**
- *  Failure block that is called if any error occured.
+ *  Failure block that is called if any error occured. Status code is optional param in this block.
  */
 @property (nonatomic, copy) FYFailureBlock failureBlock;
 
