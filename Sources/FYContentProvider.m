@@ -17,7 +17,7 @@
 
 #pragma mark - FYContentProvider
 
-#define DEBUG_CONTENT_PROVIDER 1
+#define DEBUG_CONTENT_PROVIDER 0
 
 #if DEBUG_CONTENT_PROVIDER
 #define NSLog(format, ...) NSLog(format, ##__VA_ARGS__)
