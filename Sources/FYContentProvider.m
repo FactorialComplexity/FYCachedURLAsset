@@ -760,31 +760,37 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 				[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
 					entityTag:requester.metadataFile.etag];
 			} else {
-				// TODO: Need fix for got several seek requests one right after other.
 				NSInteger currentOffset = requester.session.offset + requester.session.downloadedData.length;
 				NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - currentOffset;
 				
 				if (bytesToDownload > 0) {
-					// If we got some bytes to download -> check how much time it'll take.
-					// If time > treshold value -> transite to on-demand state and begin fetching from requested offset.
-					
-					// Calculate average download speed and how much time we need to catch up with requested offset.
-					NSTimeInterval timePassed = -[requester.session.connectionDate timeIntervalSinceNow];
-					NSInteger totalBytesDownloaded = requester.session.downloadedData.length;
-					
-					CGFloat bytesPerSecond = totalBytesDownloaded / timePassed;
-					
-					CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
-					NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
-					
-					if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
-						NSLog(@"[ContentProvider]: Will transite ON DEMAND state!");
-						requester.streamingState = kStreamingStateOnDemand;
-						
+					if (requester.streamingState == kStreamingStateOnDemand &&
+						requester.session.connectionDate == nil) {
+						// If we are already streaming on demand && we didn't connected yet -> restart connection from new offset.
 						[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
-							entityTag:requester.metadataFile.etag];
+														entityTag:requester.metadataFile.etag];
 					} else {
-						NSLog(@"[ContentProvider]: Will wait %.2f seconds...", approximateTimeForSeeking);
+						// If we got some bytes to download -> check how much time it'll take.
+						// If time > treshold value -> transite to on-demand state and begin fetching from requested offset.
+						
+						// Calculate average download speed and how much time we need to catch up with requested offset.
+						NSTimeInterval timePassed = -[requester.session.connectionDate timeIntervalSinceNow];
+						NSInteger totalBytesDownloaded = requester.session.downloadedData.length;
+						
+						CGFloat bytesPerSecond = totalBytesDownloaded / timePassed;
+						
+						CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
+						NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
+						
+						if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
+							NSLog(@"[ContentProvider]: Will transite to ON DEMAND state!");
+							requester.streamingState = kStreamingStateOnDemand;
+							
+							[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
+															entityTag:requester.metadataFile.etag];
+						} else {
+							NSLog(@"[ContentProvider]: Will wait %.2f seconds...", approximateTimeForSeeking);
+						}
 					}
 				}
 			}
