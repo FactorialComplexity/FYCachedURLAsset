@@ -10,8 +10,6 @@
 
 extern NSString *const FYResourceForURLChangedNotificationName;
 
-typedef void (^ProgressBlock) (CGFloat totalProgress);
-
 @interface FYCachedURLAsset : AVURLAsset
 
 /**

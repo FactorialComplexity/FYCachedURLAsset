@@ -181,7 +181,7 @@ UITableViewDataSource
 	NSString *cacheFileName = [NSString stringWithFormat:@"test%d.%@", (int32_t)indexPath.row, [meta[@"url"] pathExtension]];
 	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
 	
-	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:[NSURL URLWithString:meta[@"url"]] cacheFilePath:nil];
+	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:[NSURL URLWithString:meta[@"url"]] cacheFilePath:cacheFilePath];
 	AVPlayerItem *newItem = [[AVPlayerItem alloc] initWithAsset:asset];
 	
 	if (_player.currentItem) {

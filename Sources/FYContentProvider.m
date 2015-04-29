@@ -8,182 +8,16 @@
 
 // Model
 #import "FYContentProvider.h"
+#import "FYContentProvider+Classes.h"
 #import "FYCachedURLAsset.h"
 #import "FYDownloadSession.h"
 
 // Frameworks
-@import MobileCoreServices;
 @import SystemConfiguration;
-
-#pragma mark - FYResourceLoader
-
-@interface FYResourceLoader : NSObject
-
-@property (nonatomic) AVAssetResourceLoader *loader;
-@property (nonatomic) AVAssetResourceLoadingRequest *latestRequest;
-
-- (instancetype)initWithLoader:(AVAssetResourceLoader *)loader;
-
-@end
-
-@implementation FYResourceLoader
-
-- (instancetype)initWithLoader:(AVAssetResourceLoader *)loader {
-	if (self = [super init]) {
-		_loader = loader;
-	}
-	return self;
-}
-
-@end
-
-#pragma mark - FYCachedFileMeta
-
-@interface FYCachedFileMeta : NSObject
-<
-NSCoding
->
-
-@property (nonatomic, readonly) NSString *etag;
-@property (nonatomic, readonly) NSString *mimeType;
-@property (nonatomic, readonly) NSInteger contentLength;
-
-- (instancetype)initWithResponse:(NSHTTPURLResponse *)response fromSession:(FYDownloadSession *)session;
-
-@end
-
-@implementation FYCachedFileMeta
-
-#pragma mark - Init
-
-- (instancetype)initWithResponse:(NSHTTPURLResponse *)response fromSession:(FYDownloadSession *)session {
-	if (self = [super init]) {
-		_etag = response.allHeaderFields[@"ETag"];
-		
-		CFStringRef contentType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType,
-																		(__bridge CFStringRef)(response.MIMEType),
-																		NULL);
-		_mimeType = CFBridgingRelease(contentType);
-		
-		_contentLength = response.expectedContentLength + session.offset;
-	}
-	
-	return self;
-}
-
-#pragma mark - NSCoding
-
-- (instancetype)initWithCoder:(NSCoder *)aDecoder {
-	if (self = [super init]) {
-		_etag = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(etag))];
-		_mimeType = [aDecoder decodeObjectForKey:NSStringFromSelector(@selector(mimeType))];
-		_contentLength = [aDecoder decodeIntegerForKey:NSStringFromSelector(@selector(contentLength))];
-	}
-	
-	return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)aCoder {
-	[aCoder encodeObject:_etag forKey:NSStringFromSelector(@selector(etag))];
-	[aCoder encodeObject:_mimeType forKey:NSStringFromSelector(@selector(mimeType))];
-	[aCoder encodeInteger:_contentLength forKey:NSStringFromSelector(@selector(contentLength))];
-}
-
-@end
-
-#pragma mark - FYContentRequester
-
-typedef enum {
-	// Regular streaming (over internet) or from cached file.
-	kStreamingStateStreaming,
-	// Streaming on demand (without caching). This happens when user wants to seek to specific times.
-	kStreamingStateOnDemand
-} StreamingState;
-
-@interface FYContentRequester : NSObject
-
-/**
- *  Current streaming state for content requester.
- */
-@property (nonatomic) StreamingState streamingState;
-
-/**
- *  Download session associated with given requester.
- */
-@property (nonatomic) FYDownloadSession *session;
-
-/**
- *  Original resource URL from which should be cached.
- */
-@property (nonatomic) NSURL *resourceURL;
-
-/**
- *  Cache filename path to which data should be stored from resourceURL.
- */
-@property (nonatomic) NSString *cacheFilenamePath;
-
-/**
- *  Array of FYResourceLoader instances that contain resource loader and latest request for it. 
- *	(They should be equal to total requesters count)
- */
-@property (nonatomic) NSMutableArray *resourceLoaders;
-
-/**
- *  Total count of current requesters. Act like a reference counting mechanism.
- *	When it drops to zero it's treated as no one needs content from given URL.
- *	In this case content requester deallocates and performs cleanup.
- */
-@property (nonatomic) NSInteger totalRequestersCount;
-
-/**
- *  Tells if current content provider is streaming data from local storage.
- */
-@property (nonatomic) BOOL isStreamingFromCache;
-
-/**
- *  Media data that is gathered from cached file.
- */
-@property (nonatomic) NSData *localData;
-
-/**
- *  Metadata file for given requester.
- */
-@property (nonatomic) FYCachedFileMeta *metadataFile;
-
-@end
-
-@implementation FYContentRequester
-
-#pragma mark - Lifecycle
-
-- (instancetype)initWithURL:(NSURL *)resourceURL cacheFilePath:(NSString *)path resourceLoader:(AVAssetResourceLoader *)loader {
-	if (self = [super init]) {
-		_session = [[FYDownloadSession alloc] initWithURL:resourceURL];
-		_cacheFilenamePath = path;
-
-		_resourceURL = resourceURL;
-		_localData = [NSMutableData new];
-		_resourceLoaders = [NSMutableArray new];
-
-		_totalRequestersCount = 1;
-		
-		FYResourceLoader *resourceLoader = [[FYResourceLoader alloc] initWithLoader:loader];
-		[_resourceLoaders addObject:resourceLoader];
-	}
-	
-	return self;
-}
-
-- (void)dealloc {
-	// Testing memory leaks.
-	NSLog(@"%s", __FUNCTION__);
-}
-
-@end
 
 #pragma mark - FYContentProvider
 
-#define DEBUG_CONTENT_PROVIDER 0
+#define DEBUG_CONTENT_PROVIDER 1
 
 #if DEBUG_CONTENT_PROVIDER
 #define NSLog(format, ...) NSLog(format, ##__VA_ARGS__)
@@ -202,6 +36,7 @@ typedef void (^FYReachabilityCallback) (BOOL isConnectedToTheInternet);
  *	3. We always tell to resource loader that we will process it's request.
  *	4. Sometimes resource loader doesn't want to ask for data.
  *	5. Some media doesn't load 'duration' for asset.
+ *	6. Sometimes videos are played without sound.
  */
 
 /**
@@ -503,7 +338,7 @@ AVAssetResourceLoaderDelegate
 	
 	requester.session.resourceChangedBlock = ^{
 		// Resource changed. We need to invalidate.
-		NSLog(@"[ContentProvider]Resource changed! Will invalidate!");
+		NSLog(@"[ContentProvider]: Resource changed! Will invalidate!");
 		
 		// Remove all files
 		NSString *cachedFilePath = weakRequester.cacheFilenamePath;
@@ -783,7 +618,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 						CGFloat approximateTimeForSeeking = bytesToDownload / bytesPerSecond;
 						NSLog(@"[ContentProvider]: Time passed: %.2fs. AVG: %.2f KBps. Approximate: %.2f (KBytes to download: %d)", timePassed, bytesPerSecond / 1024, approximateTimeForSeeking, (int32_t)bytesToDownload / 1024);
 						
-						if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold) {
+						if (approximateTimeForSeeking > kMaximumWaitingTimeTreshold ||
+							isnan(approximateTimeForSeeking)) {
 							NSLog(@"[ContentProvider]: Will transite to ON DEMAND state!");
 							requester.streamingState = kStreamingStateOnDemand;
 							
