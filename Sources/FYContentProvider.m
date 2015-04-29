@@ -175,6 +175,7 @@ typedef enum {
 }
 
 - (void)dealloc {
+	// Testing memory leaks.
 	NSLog(@"%s", __FUNCTION__);
 }
 
@@ -182,7 +183,7 @@ typedef enum {
 
 #pragma mark - FYContentProvider
 
-#define DEBUG_CONTENT_PROVIDER 1
+#define DEBUG_CONTENT_PROVIDER 0
 
 #if DEBUG_CONTENT_PROVIDER
 #define NSLog(format, ...) NSLog(format, ##__VA_ARGS__)
@@ -440,10 +441,10 @@ AVAssetResourceLoaderDelegate
 		[self processPendingRequestsForRequester:weakRequester];
 		
 //		 Testing.
-		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
-												   weakRequester.localData.length,
-												   weakRequester.session.downloadedData.length,
-												   weakRequester.metadataFile.contentLength);
+//		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
+//												   weakRequester.localData.length,
+//												   weakRequester.session.downloadedData.length,
+//												   weakRequester.metadataFile.contentLength);
 	};
 	
 	requester.session.successBlock = ^{

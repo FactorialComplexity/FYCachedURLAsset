@@ -24,7 +24,7 @@ NSURLConnectionDataDelegate
 	NSString *_cachedFilePath;
 }
 
-#pragma mark - Init
+#pragma mark - Lifecycle
 
 + (instancetype)cachedURLAssetWithURL:(NSURL *)url
 						cacheFilePath:(NSString *)path {

@@ -44,15 +44,15 @@ UITableViewDataSource
 
 	[self setupDatasource];
 	
-	[FYContentProvider shared].progressBlock = ^(NSInteger startOffset, NSInteger localPresented, NSInteger downloaded, NSInteger totalBytesToDownload) {
-		_progressView.locallyPresented = localPresented;
-		_progressView.startOffsetProgress = startOffset;
-		_progressView.currentProgress = downloaded;
-		_progressView.totalProgress = totalBytesToDownload;
-		
-		[_progressView flush];
-	};
-//	_progressView.hidden = YES;
+//	[FYContentProvider shared].progressBlock = ^(NSInteger startOffset, NSInteger localPresented, NSInteger downloaded, NSInteger totalBytesToDownload) {
+//		_progressView.locallyPresented = localPresented;
+//		_progressView.startOffsetProgress = startOffset;
+//		_progressView.currentProgress = downloaded;
+//		_progressView.totalProgress = totalBytesToDownload;
+//		
+//		[_progressView flush];
+//	};
+	_progressView.hidden = YES;
 }
 
 #pragma mark - Callbacks

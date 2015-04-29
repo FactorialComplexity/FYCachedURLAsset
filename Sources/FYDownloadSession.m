@@ -172,7 +172,7 @@ NSURLConnectionDataDelegate
 	
 	!self.chunkDownloadBlock ? : self.chunkDownloadBlock(data);
 	
-	// TODO: Emulating failure.
+	// Emulating failure.
 //	static int failer = 0;
 //	failer++;
 //	if (failer == 15) {
