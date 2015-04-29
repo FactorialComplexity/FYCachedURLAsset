@@ -17,7 +17,7 @@
 
 #pragma mark - FYContentProvider
 
-#define DEBUG_CONTENT_PROVIDER 0
+#define DEBUG_CONTENT_PROVIDER 1
 
 #if DEBUG_CONTENT_PROVIDER
 #define NSLog(format, ...) NSLog(format, ##__VA_ARGS__)
@@ -158,6 +158,8 @@ AVAssetResourceLoaderDelegate
 			void (^streamFromCacheBlock) () = ^{
 				requester.metadataFile = metadataFile;
 				requester.localData = cachedData;
+				[requester.contiguousData appendData:cachedData];
+				
 				requester.isStreamingFromCache = cachedFileExist;
 				
 				if (!cachedFileExist) {
@@ -274,38 +276,63 @@ AVAssetResourceLoaderDelegate
 		[self processPendingRequestsForRequester:weakRequester];
 	};
 	
+// TODO: Refactor that. Create download storage.
 	requester.session.chunkDownloadBlock = ^(NSData *chunk) {
+		// Offset in resource
+		NSInteger contiguousOffset = weakRequester.session.offset + weakRequester.session.downloadedData.length - chunk.length;
+		
+//		NSLog(@"Contuguos offset: %d. Contiguous data length: %d", (int32_t)contiguousOffset, (int32_t)weakRequester.contiguousData.length);
+		
+		if (contiguousOffset <= weakRequester.contiguousData.length &&
+			(contiguousOffset + chunk.length) >= weakRequester.contiguousData.length) {
+			NSRange bytesRangeToAppend = (NSRange) {
+				weakRequester.contiguousData.length - contiguousOffset,
+				contiguousOffset + chunk.length - weakRequester.contiguousData.length
+			};
+			
+			[weakRequester.contiguousData appendData:[chunk subdataWithRange:bytesRangeToAppend]];
+		}
+		
 		[self processPendingRequestsForRequester:weakRequester];
 		
 //		 Testing.
-//		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
-//												   weakRequester.localData.length,
-//												   weakRequester.session.downloadedData.length,
-//												   weakRequester.metadataFile.contentLength);
+		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
+												   weakRequester.localData.length,
+												   weakRequester.session.downloadedData.length,
+												   weakRequester.metadataFile.contentLength);
 	};
 	
+// TODO: Refactor (create download storage)
 	requester.session.successBlock = ^{
 		NSLog(@"Will save ? %@", (weakRequester.streamingState == kStreamingStateStreaming ? @"YES" : @"NO"));
 		
-		if (weakRequester.streamingState == kStreamingStateStreaming &&
-			(weakRequester.localData.length > 0 ||
-			weakRequester.session.downloadedData.length > 0)) {
-				NSMutableData *fullMediaData = [NSMutableData new];
-				
-				[fullMediaData appendData:weakRequester.localData];
-				[fullMediaData appendData:weakRequester.session.downloadedData];
-				[fullMediaData writeToFile:weakRequester.cacheFilenamePath atomically:NO];
-				
-				// Cleanup any temp files that may exist in case of resuming download.
-				NSString *tempFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
-				[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+		if (weakRequester.contiguousData.length == weakRequester.metadataFile.contentLength) {
+			[weakRequester.contiguousData writeToFile:weakRequester.cacheFilenamePath atomically:NO];
+			
+			// Cleanup any temp files that may exist in case of resuming download.
+			NSString *tempFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
+			[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+		} else if (weakRequester.streamingState == kStreamingStateStreaming &&
+				   (weakRequester.localData.length > 0 ||
+					weakRequester.session.downloadedData.length > 0)) {
+					   
+					   NSMutableData *fullMediaData = [NSMutableData new];
+					   
+					   [fullMediaData appendData:weakRequester.localData];
+					   [fullMediaData appendData:weakRequester.session.downloadedData];
+					   [fullMediaData writeToFile:weakRequester.cacheFilenamePath atomically:NO];
+					   
+					   // Cleanup any temp files that may exist in case of resuming download.
+					   NSString *tempFilePath = [weakRequester.cacheFilenamePath stringByAppendingString:[self temporaryFileSuffix]];
+					   [[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+
 		}
 		
 		[self processPendingRequestsForRequester:weakRequester];
 	};
 	
 	requester.session.failureBlock = ^(NSError *error, NSInteger statusCode) {
-		NSLog(@"Failure: %@. Status code: %d", error, statusCode);
+		NSLog(@"Failure: %@. Status code: %d", error, (int32_t)statusCode);
 		
 		if (statusCode == 404) {
 			[[NSNotificationCenter defaultCenter] postNotificationName:FYResourceForURLDoesntExistNotificationName
@@ -434,7 +461,7 @@ AVAssetResourceLoaderDelegate
 				
 				[dataRequest respondWithData:[availableData subdataWithRange:chunkRange]];
 				
-				didRespondToDataRequest = bytesToGive > 0;
+				didRespondToDataRequest = dataRequest.currentOffset >= (dataRequest.requestedOffset + dataRequest.requestedLength);
 			}
 		} else if (requester.streamingState == kStreamingStateOnDemand) {
 			NSInteger totalBytesGot = requester.session.offset + requester.session.downloadedData.length;
@@ -452,7 +479,7 @@ AVAssetResourceLoaderDelegate
 				
 				[dataRequest respondWithData:[requester.session.downloadedData subdataWithRange:chunkRange]];
 				
-				didRespondToDataRequest = bytesToGive > 0;
+				didRespondToDataRequest = dataRequest.currentOffset >= (dataRequest.requestedOffset + dataRequest.requestedLength);
 			}
 		}
 	}
@@ -604,6 +631,13 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 		
 		// If we're not streaming from cache and loading request is asking for data then:
 		if (!requester.isStreamingFromCache && loadingRequest.dataRequest) {
+			
+//			if (requester.streamingState == kStreamingStateStreaming) {
+//				
+//			} else if (requester.streamingState == kStreamingStateOnDemand) {
+//				
+//			}
+			
 			if (requester.session.offset > loadingRequest.dataRequest.requestedOffset) {
 				NSLog(@"[ContentProvider]: Resource loader is requesting data behind current session offset. Will transite to on-demand state.");
 				// We've requested data behind current session offset.

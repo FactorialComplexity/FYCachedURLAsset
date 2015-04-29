@@ -91,6 +91,11 @@ typedef enum {
 @property (nonatomic) NSData *localData;
 
 /**
+ *  Contiguos media data that may be assembled in cached file later.
+ */
+@property (nonatomic) NSMutableData *contiguousData;
+
+/**
  *  Metadata file for given requester.
  */
 @property (nonatomic) FYCachedFileMeta *metadataFile;

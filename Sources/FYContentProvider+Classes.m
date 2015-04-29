@@ -77,7 +77,8 @@
 		_cacheFilenamePath = path;
 		
 		_resourceURL = resourceURL;
-		_localData = [NSMutableData new];
+		_localData = [NSData new];
+		_contiguousData = [NSMutableData new];
 		_resourceLoaders = [NSMutableArray new];
 		
 		_totalRequestersCount = 1;
