@@ -18,6 +18,9 @@ NSURLConnectionDataDelegate
 	NSMutableData *_downloadedData;
 	
 	NSURLConnection *_connection;
+	
+	// Tag that is supplied by caller.
+	NSString *_currentEntityTag;
 }
 
 #pragma mark - Init
@@ -37,6 +40,8 @@ NSURLConnectionDataDelegate
 - (void)startLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)etag {
 	// Cleanup if we already loading something.
 	[self cancelLoading];
+	
+	_currentEntityTag = etag;
 	
 	// Build headers to request data from requested offset.
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.resourceURL];
@@ -60,6 +65,8 @@ NSURLConnectionDataDelegate
 	// Cleanup if we already loading something.
 	[self cancelLoading];
 	
+	_currentEntityTag = etag;
+	
 	// Build headers to request data from requested offset.
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.resourceURL];
 	request.cachePolicy = NSURLRequestReloadIgnoringCacheData;
@@ -79,6 +86,8 @@ NSURLConnectionDataDelegate
 - (void)cancelLoading {
 	[_connection cancel];
 	_connection = nil;
+	
+	_currentEntityTag = nil;
 	
 	_downloadedData.length = 0;
 	_offset = 0;
@@ -130,7 +139,16 @@ NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-	NSLog(@"Response: %@", httpResponse);
+	
+	if (_currentEntityTag.length > 0) {
+		// Check is resource changed while downloading.
+		if (![httpResponse.allHeaderFields[@"ETag"] isEqualToString:_currentEntityTag]) {
+			[self cancelLoading];
+			
+			!self.resourceChangedBlock ? : self.resourceChangedBlock();
+			return;
+		}
+	}
 	
 	if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
 		_response = (NSHTTPURLResponse *)response;
@@ -153,16 +171,17 @@ NSURLConnectionDataDelegate
 	[_downloadedData appendData:data];
 	
 	!self.chunkDownloadBlock ? : self.chunkDownloadBlock(data);
-	// TODO: Testing
-	static int failer = 0;
-	failer++;
-	if (failer == 10) {
+	
+	// TODO: Emulating failure.
+//	static int failer = 0;
+//	failer++;
+//	if (failer == 10) {
 //		NSLog(@"Will FAIL!");
 //		[connection cancel];
 //		[self connection:connection didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain
 //																		 code:0
 //																	 userInfo:@{NSLocalizedDescriptionKey : @"TEST"}]];
-	}
+//	}
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {

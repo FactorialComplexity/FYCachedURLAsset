@@ -64,6 +64,7 @@ typedef void (^FYResourceChangedBlock) ();
 
 /**
  *  Block that is called when resource changed for given URL.
+ *	Session automatically invalidates all data it got.
  */
 @property (nonatomic, copy) FYResourceChangedBlock resourceChangedBlock;
 
@@ -78,16 +79,17 @@ typedef void (^FYResourceChangedBlock) ();
 - (void)fetchEntityTagForResourceWithSuccess:(FYSuccessWithETagBlock)success
 									 failure:(FYFailureBlock)failure;
 
-/**
- *  Starts loading content from beggining.
- */
-- (void)startLoading;
-
-/**
- *  Begins loading content from given URL from supplied offset for specific entity.
- *	If loading is currently in progress -> it will be restarted.
- */
-- (void)continueLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)tag;
+// TODO: Implement these methods.
+///**
+// *  Starts loading content from beggining.
+// */
+//- (void)startLoading;
+//
+///**
+// *  Begins loading content from given URL from supplied offset for specific entity.
+// *	If loading is currently in progress -> it will be restarted.
+// */
+//- (void)continueLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)tag;
 
 - (void)startLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)etag;
 - (void)startLoadingFrom:(NSInteger)from to:(NSInteger)to entityTag:(NSString *)etag; // TODO: Not integrated/tested.

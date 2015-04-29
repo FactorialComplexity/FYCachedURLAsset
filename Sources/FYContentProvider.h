@@ -18,7 +18,7 @@
 AVAssetResourceLoaderDelegate
 >
 
-// For testing
+// TODO: For testing
 //@property (nonatomic, copy) void (^progressBlock) (NSInteger startOffset, NSInteger localPresented, NSInteger downloaded, NSInteger totalBytesToDownload);
 
 + (instancetype)shared;

@@ -141,7 +141,7 @@ UITableViewDataSource
 	_testDatasource = @[
 						@{@"name" : @"East of Eden", @"url" : @"https://cs7-2v4.vk-cdn.net/p6/19987580c9e462.mp3?extra=5grXkGJEPr6cBR1cDxKevsRy3cHdfYLNev-mYO1fyI85OVQCPbpiibMgzoHaI84MB_WuOVzdUihHdKFEpVVMoZOUZt0jqC8?/Zella%20Day%20-%20East%20of%20Eden.mp3"},
 						@{@"name" : @"Spaceman", @"url" : @"https://psv4.vk.me/c521114/u159894783/audios/39b74ba982cb.mp3?extra=haTJfDeJbAPUwzmSc9IvgFezygpXGwE_VKMiV2lRz006rs5hfEr8nSQMU4KA8MT7_nuU3l24WpwCbLdMawH53VFg0T4q-O4?/Hardwell%20@%20Ultra%20Music%20Festival%202013%20-%20Hardwell%20-%20Spaceman%20(Aino%20Rework%20Intro%20Edit)%20%3E%20vk.com/clubmusicit.mp3"},
-						@{@"name" : @"Song #2", @"url" : @"https://cs7-1v4.vk-cdn.net/p10/0f0773d66fe87c.mp3?extra=J7WbEf8sjA_O3eke_mrbaqMUVUd2h_OIbKmaDRLMlQ-QdGfYKhAl-3ZFEjaZ-fDN7jWE6D2nBvUSR-usKCtVkvtd4oQrv-c?/The%20Ting%20Tings%20-%20That%27s%20Not%20My%20Name.mp3"},
+						@{@"name" : @"Song #2", @"url" : @"https://cs7-1v4.vk-cdn.net/p20/f97c01a0d622bd.mp3?extra=HzqjURhLo6p-mhpK8Zcdiel0E-5J1P8poHvrCGGS-UeIFx1JGoG0QER8q3RJLGIj9LyQdt4YZiIOvhcLzoYlPAEue727RTQ?/Tiesto%20&%20KSHMR%20feat.%20Vassy%20-%20Secrets%20(Original%20Mix).mp3"},
 						@{@"name" : @"Video", @"url" : @"http://hmmb-staging.s3.amazonaws.com/the_world_before_video-768px.mp4"},
 						@{@"name" : @"Outdated resource", @"url" : @"http://hmmb-staging.s3.amazonaws.com/test_audio.mp3"}
 						];

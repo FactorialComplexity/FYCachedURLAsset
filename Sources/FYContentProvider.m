@@ -93,8 +93,6 @@ NSCoding
 
 #pragma mark - FYContentRequester
 
-static NSTimeInterval const kMaximumWaitingTimeTreshold = 5.0f;
-
 typedef enum {
 	// Regular streaming (over internet) or from cached file.
 	kStreamingStateStreaming,
@@ -192,8 +190,22 @@ typedef enum {
 #define NSLog(format, ...)
 #endif
 
+static NSTimeInterval const kMaximumWaitingTimeTreshold = 5.0f;
+
 typedef void (^FYReachabilityCallback) (BOOL isConnectedToTheInternet);
 
+/**
+ *  Known issues:
+ *	1. All io tasks are performed on main queue.
+ *	2. If download failed -> this code doesn't resume downloading if internet connection did appear again.
+ *	3. We always tell to resource loader that we will process it's request.
+ *	4. Sometimes resource loader doesn't want to ask for data.
+ *	5. Some media doesn't load 'duration' for asset.
+ */
+
+/**
+ *  Class that gives media data for content requesters.
+ */
 @interface FYContentProvider ()
 <
 AVAssetResourceLoaderDelegate
@@ -290,9 +302,11 @@ AVAssetResourceLoaderDelegate
 		[_contentRequesters addObject:requester];
 		
 		[self determineIsNetworkReachableWithCallback:^(BOOL isConnectedToTheInternet) {
-			// 1. If we have internet connection & cached version -> check on server is cached version is up-to date.
-			// 2. If we have internet connection & !cached version -> create temp file and download data into it.
-			// 3. If we don't have internet connection -> check for cached version on disk. If it's present -> play it.
+			// We determined is we're currently connected to the internet.
+			// What should we do next?
+			// 1. If we haven't got cached file - try to download it from server. If we're not connected to the internet we can't do anything.
+			// 2. If we have got cached file - check is it up-to date on server. If we don't have connection -> play from cache.
+			// 3. If cached file is up-to date -> simply play it.
 			NSString *metaFilePath = [cachedFilePath stringByAppendingString:[self metadataFileSuffix]];
 			NSString *tempFilePath = [cachedFilePath stringByAppendingString:[self temporaryFileSuffix]];
 			
@@ -300,9 +314,15 @@ AVAssetResourceLoaderDelegate
 			BOOL metaFileExist = [[NSFileManager defaultManager] fileExistsAtPath:metaFilePath];
 			BOOL tempCachedFileExist = [[NSFileManager defaultManager] fileExistsAtPath:tempFilePath];
 			
+			// Stream from cache method is async, so some bad things can happen.
+			// But we don't care, coz we'll store needed data right now.
+			FYCachedFileMeta *metadataFile = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
+			NSData *cachedData = [NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath];
+			
 			void (^streamFromCacheBlock) () = ^{
+				requester.metadataFile = metadataFile;
+				requester.localData = cachedData;
 				requester.isStreamingFromCache = cachedFileExist;
-				requester.localData = [NSData dataWithContentsOfFile:cachedFileExist ? cachedFilePath : tempFilePath];
 				
 				if (!cachedFileExist) {
 					NSLog(@"[ContentProvider]: Cached file isn't fully downloaded!");
@@ -312,25 +332,28 @@ AVAssetResourceLoaderDelegate
 					}
 				}
 				
-				// This invocation is async, so AVFoundation may ask us for data.
+				// This invocation is may be async, so AVFoundation may ask us for data.
 				[self processPendingRequestsForRequester:requester];
 			};
 
 			if (metaFileExist && (cachedFileExist || tempCachedFileExist)) {
 				NSLog(@"[ContentProvider]: Got cached file!");
-				requester.metadataFile = [NSKeyedUnarchiver unarchiveObjectWithFile:metaFilePath];
 
 				if (isConnectedToTheInternet) {
 					NSLog(@"[ContentProvider]: Will check is cached file is up-to date.");
 					// Check is cached file is up-to date.
 					[requester.session fetchEntityTagForResourceWithSuccess:^(NSString *etag) {
-						if ([etag isEqualToString:requester.metadataFile.etag]) {
+						if ([etag isEqualToString:metadataFile.etag]) {
 							// Everything is ok, simply play file from cache.
 							NSLog(@"[ContentProvider]: Cached file is up-to date!");
 							streamFromCacheBlock();
 						} else {
 							// File changed on server, redownload it.
 							NSLog(@"[ContentProvider]: Cached file is out of date! Will download new!");
+							[[NSFileManager defaultManager] removeItemAtPath:metaFilePath error:nil];
+							[[NSFileManager defaultManager] removeItemAtPath:cachedFilePath error:nil];
+							[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+							
 							[requester.session startLoadingFromOffset:0 entityTag:nil];
 						}
 					} failure:^(NSError *error) {
@@ -416,7 +439,7 @@ AVAssetResourceLoaderDelegate
 	requester.session.chunkDownloadBlock = ^(NSData *chunk) {
 		[self processPendingRequestsForRequester:weakRequester];
 		
-		// Testing.
+//		 Testing.
 //		!self.progressBlock ? : self.progressBlock(weakRequester.session.offset,
 //												   weakRequester.localData.length,
 //												   weakRequester.session.downloadedData.length,
@@ -460,15 +483,57 @@ AVAssetResourceLoaderDelegate
 				[fullMediaData writeToFile:partFilePath atomically:NO];
 		}
 		
-		// TOOD: Invalidate
+		for (FYResourceLoader *loader in weakRequester.resourceLoaders) {
+			if (loader.latestRequest) {
+				// Give last chance to satisfy latest request.
+				BOOL didSatisfy = [self tryToSatisfyRequest:loader.latestRequest forRequester:weakRequester];
+				
+				if (didSatisfy) {
+					[loader.latestRequest finishLoading];
+				} else {
+					// TODO: Error
+					[loader.latestRequest finishLoadingWithError:nil];
+				}
+				
+				loader.latestRequest = nil;
+			}
+		}
 	};
 	
 	requester.session.resourceChangedBlock = ^{
 		// Resource changed. We need to invalidate.
+		NSLog(@"[ContentProvider]Resource changed! Will invalidate!");
+		
+		// Remove all files
+		NSString *cachedFilePath = weakRequester.cacheFilenamePath;
+		NSString *metaFilePath = [cachedFilePath stringByAppendingString:[self metadataFileSuffix]];
+		NSString *tempFilePath = [cachedFilePath stringByAppendingString:[self temporaryFileSuffix]];
+
+		[[NSFileManager defaultManager] removeItemAtPath:metaFilePath error:nil];
+		[[NSFileManager defaultManager] removeItemAtPath:cachedFilePath error:nil];
+		[[NSFileManager defaultManager] removeItemAtPath:tempFilePath error:nil];
+
+		// Cleanup cached data.
+		weakRequester.metadataFile = nil;
+		weakRequester.localData = nil;
+		
+		// Remove resouce loaders.
+		for (FYResourceLoader *loader in weakRequester.resourceLoaders) {
+			// TODO: Fill with normal error.
+			[loader.latestRequest finishLoadingWithError:[NSError errorWithDomain:NSCocoaErrorDomain
+																			 code:0
+																		 userInfo:nil]];
+			
+			[loader.loader setDelegate:nil queue:dispatch_get_main_queue()];
+			loader.latestRequest = nil;
+			loader.loader = nil;
+		}
+		
+		[weakRequester.resourceLoaders removeAllObjects];
+		
+		// Notify about failure.
 		[[NSNotificationCenter defaultCenter] postNotificationName:FYResourceForURLChangedNotificationName
 			object:weakRequester.resourceURL];
-		
-		// TODO: Invalidate:
 	};
 }
 
@@ -684,7 +749,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 		// If we didn't satisfy request -> add it as pending request to process later.
 		loader.latestRequest = loadingRequest;
 		
-		// TODO: This shouldn't work like that:
 		// If we're not streaming from cache and loading request is asking for data then:
 		if (!requester.isStreamingFromCache && loadingRequest.dataRequest) {
 			if (requester.session.offset > loadingRequest.dataRequest.requestedOffset) {
@@ -696,8 +760,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target,
 				[requester.session startLoadingFromOffset:loadingRequest.dataRequest.requestedOffset
 					entityTag:requester.metadataFile.etag];
 			} else {
-				NSInteger bytesDownloaded = requester.session.offset + requester.session.downloadedData.length;
-				NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - bytesDownloaded;
+				// TODO: Need fix for got several seek requests one right after other.
+				NSInteger currentOffset = requester.session.offset + requester.session.downloadedData.length;
+				NSInteger bytesToDownload = loadingRequest.dataRequest.requestedOffset - currentOffset;
 				
 				if (bytesToDownload > 0) {
 					// If we got some bytes to download -> check how much time it'll take.

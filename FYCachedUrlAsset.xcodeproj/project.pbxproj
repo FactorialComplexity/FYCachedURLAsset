@@ -20,7 +20,7 @@
 		7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79AB1AEA43810026F570 /* MediaCell.m */; };
 		7D9E79B21AEA79B70026F570 /* FYContentProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79B11AEA79B70026F570 /* FYContentProvider.m */; };
 		7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05E41AEE824400AE6E9F /* ProgressView.m */; };
-		7DFB05E81AEE8D0500AE6E9F /* FYDownloadSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05E71AEE8D0500AE6E9F /* FYDownloadSession.m */; };
+		7DFB05EB1AF0CE8400AE6E9F /* FYDownloadSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,8 +57,8 @@
 		7D9E79B11AEA79B70026F570 /* FYContentProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYContentProvider.m; path = Sources/FYContentProvider.m; sourceTree = "<group>"; };
 		7DFB05E31AEE824400AE6E9F /* ProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgressView.h; sourceTree = "<group>"; };
 		7DFB05E41AEE824400AE6E9F /* ProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProgressView.m; sourceTree = "<group>"; };
-		7DFB05E61AEE8D0500AE6E9F /* FYDownloadSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYDownloadSession.h; sourceTree = "<group>"; };
-		7DFB05E71AEE8D0500AE6E9F /* FYDownloadSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYDownloadSession.m; sourceTree = "<group>"; };
+		7DFB05E91AF0CE8400AE6E9F /* FYDownloadSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FYDownloadSession.h; path = Sources/FYDownloadSession.h; sourceTree = "<group>"; };
+		7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYDownloadSession.m; path = Sources/FYDownloadSession.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,8 +158,8 @@
 				7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */,
 				7D9E79AF1AEA79A90026F570 /* FYContentProvider.h */,
 				7D9E79B11AEA79B70026F570 /* FYContentProvider.m */,
-				7DFB05E61AEE8D0500AE6E9F /* FYDownloadSession.h */,
-				7DFB05E71AEE8D0500AE6E9F /* FYDownloadSession.m */,
+				7DFB05E91AF0CE8400AE6E9F /* FYDownloadSession.h */,
+				7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -294,9 +294,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D3E4F3A1AE906A400F8B91D /* FYCachedURLAsset.m in Sources */,
+				7DFB05EB1AF0CE8400AE6E9F /* FYDownloadSession.m in Sources */,
 				7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */,
 				7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */,
-				7DFB05E81AEE8D0500AE6E9F /* FYDownloadSession.m in Sources */,
 				7D3E4F2F1AE9053600F8B91D /* AppDelegate.m in Sources */,
 				7D9E79B21AEA79B70026F570 /* FYContentProvider.m in Sources */,
 				7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */,
