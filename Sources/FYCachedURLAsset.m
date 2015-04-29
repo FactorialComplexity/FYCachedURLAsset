@@ -28,7 +28,9 @@ NSURLConnectionDataDelegate
 
 + (instancetype)cachedURLAssetWithURL:(NSURL *)url
 						cacheFilePath:(NSString *)path {
-
+	// Don't allow nil path.
+	path = path.length > 0 ? path : @"";
+	
 	FYCachedURLAsset *asset = [[self alloc] initWithURL:url cacheFilePath:path];
 	
 	[[FYContentProvider shared] startResourceLoadingFromURL:url toCachedFilePath:path withResourceLoader:asset.resourceLoader];
