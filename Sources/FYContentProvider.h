@@ -26,6 +26,7 @@ AVAssetResourceLoaderDelegate
 - (void)startResourceLoadingFromURL:(NSURL *)url toCachedFilePath:(NSString *)cachedFilePath
 			withResourceLoader:(AVAssetResourceLoader *)loader;
 
-- (void)stopResourceLoadingFromURL:(NSURL *)url cachedFilePath:(NSString *)cachedFilePath;
+- (void)stopResourceLoadingFromURL:(NSURL *)url cachedFilePath:(NSString *)cachedFilePath
+			resourceLoader:(AVAssetResourceLoader *)loader;
 
 @end

@@ -58,7 +58,10 @@ NSURLConnectionDataDelegate
 	}
 	
 	_offset = offset;
-	_connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	
+	_connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO];
+	[_connection scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+	[_connection start];
 }
 
 - (void)startLoadingFrom:(NSInteger)from to:(NSInteger)to entityTag:(NSString *)etag {
@@ -109,7 +112,7 @@ NSURLConnectionDataDelegate
 				NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
 				
 				if (httpResponse.statusCode >= 200 && httpResponse.statusCode < 300) {
-					dispatch_async(dispatch_get_main_queue(), ^{
+					dispatch_async(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
 						!success ? : success(httpResponse.allHeaderFields[@"ETag"]);
 					});
 				} else {
@@ -123,14 +126,13 @@ NSURLConnectionDataDelegate
 																  code:httpResponse.statusCode
 															  userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
 					
-					dispatch_async(dispatch_get_main_queue(), ^{
+					dispatch_async(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
 						!failure ? : failure(localizedError, httpResponse.statusCode);
 					});
 				}
 			} else {
-				dispatch_async(dispatch_get_main_queue(), ^{
-					!failure ? : failure(connectionError, 0
-										 );
+				dispatch_async(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
+					!failure ? : failure(connectionError, 0);
 				});
 			}
 	}];
@@ -139,39 +141,45 @@ NSURLConnectionDataDelegate
 #pragma mark - NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-	
-	if (_currentEntityTag.length > 0) {
-		// Check is resource changed while downloading.
-		if (![httpResponse.allHeaderFields[@"ETag"] isEqualToString:_currentEntityTag]) {
-			[self cancelLoading];
-			
-			!self.resourceChangedBlock ? : self.resourceChangedBlock();
-			return;
+	dispatch_sync(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+		_response = httpResponse;
+		
+		if (_currentEntityTag.length > 0) {
+			// Check is resource changed while downloading.
+			if (![httpResponse.allHeaderFields[@"ETag"] isEqualToString:_currentEntityTag]) {
+				[self cancelLoading];
+				
+				!self.resourceChangedBlock ? : self.resourceChangedBlock();
+				
+				return;
+			}
 		}
-	}
-	
-	if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
-		_response = (NSHTTPURLResponse *)response;
-		_connectionDate = [NSDate date];
 		
-		!self.responseBlock ? : self.responseBlock(_response);
-	} else {
-		[connection cancel];
-		
-		// TODO: More introspection. We should build error for status codes that are not included in 200-299 range
-		NSString *localizedDescription = [NSHTTPURLResponse localizedStringForStatusCode:httpResponse.statusCode];
-		NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:httpResponse.statusCode
-										 userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
-		
-		!self.failureBlock ? : self.failureBlock(error, httpResponse.statusCode);
-	}	
+		if (httpResponse.statusCode == 200 || httpResponse.statusCode == 206) {
+			_response = (NSHTTPURLResponse *)response;
+			_connectionDate = [NSDate date];
+			
+			!self.responseBlock ? : self.responseBlock(_response);
+		} else {
+			[connection cancel];
+			
+			// TODO: More introspection. We should build error for status codes that are not included in 200-299 range
+			NSString *localizedDescription = [NSHTTPURLResponse localizedStringForStatusCode:httpResponse.statusCode];
+			NSError *error = [NSError errorWithDomain:NSCocoaErrorDomain code:httpResponse.statusCode
+											 userInfo:@{NSLocalizedDescriptionKey : localizedDescription}];
+			
+			!self.failureBlock ? : self.failureBlock(error, httpResponse.statusCode);
+		}
+	});
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	[_downloadedData appendData:data];
-	
-	!self.chunkDownloadBlock ? : self.chunkDownloadBlock(data);
+	dispatch_sync(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
+		[_downloadedData appendData:data];
+
+		!self.chunkDownloadBlock ? : self.chunkDownloadBlock(data);
+	});
 	
 	// Emulating failure.
 //	static int failer = 0;
@@ -186,11 +194,15 @@ NSURLConnectionDataDelegate
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	!self.successBlock ? : self.successBlock();
+	dispatch_sync(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
+		!self.successBlock ? : self.successBlock();
+	});
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	!self.failureBlock ? : self.failureBlock(error, 0);
+	dispatch_sync(self.processingQueue ? self.processingQueue : dispatch_get_main_queue(), ^{
+		!self.failureBlock ? : self.failureBlock(error, 0);
+	});
 }
 
 @end

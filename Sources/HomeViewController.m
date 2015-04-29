@@ -68,9 +68,7 @@ UITableViewDataSource
 		[_player pause];
 		
 		[_player seekToTime:time completionHandler:^(BOOL finished) {
-			if (finished) {
-				NSLog(@"Seek!");
-				
+			if (finished) {				
 				int32_t seconds = time.value % 60;
 				int32_t minutes = (int32_t)time.value / 60;
 				
@@ -135,6 +133,18 @@ UITableViewDataSource
 		NSLog(@"Player state is: %@", @[@"Unknown", @"Ready to Play", @"Failed"][newStatus]);
 	} else if ([keyPath isEqualToString:@"loadedTimeRanges"]){
 		
+	} else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
+		if (_player.currentItem.playbackLikelyToKeepUp) {
+			[_player play];
+		}
+	} else if ([keyPath isEqualToString:@"currentItem"]) {
+		AVPlayerItem *item = change[NSKeyValueChangeOldKey];
+		
+		[item removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
+		
+		AVPlayerItem *newItem = change[NSKeyValueChangeNewKey];
+		
+		[newItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
 	}
 }
 
@@ -192,6 +202,8 @@ UITableViewDataSource
 		[_player play];
 	} else {
 		_player = [AVPlayer playerWithPlayerItem:newItem];
+		[newItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
+		[_player addObserver:self forKeyPath:@"currentItem" options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew context:NULL];
 		[_player play];
 		
 		AVPlayerLayer *layer = [AVPlayerLayer playerLayerWithPlayer:_player];

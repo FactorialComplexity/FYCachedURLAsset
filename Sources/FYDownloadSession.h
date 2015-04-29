@@ -18,6 +18,11 @@ typedef void (^FYResourceChangedBlock) ();
 @interface FYDownloadSession : NSObject
 
 /**
+ *  Queue on which callbacks should be called.
+ */
+@property (nonatomic) dispatch_queue_t processingQueue;
+
+/**
  *  URL for resource.
  */
 @property (nonatomic, readonly) NSURL *resourceURL;

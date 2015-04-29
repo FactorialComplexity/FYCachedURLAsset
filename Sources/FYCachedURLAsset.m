@@ -51,7 +51,8 @@ NSURLConnectionDataDelegate
 }
 
 - (void)dealloc {
-	[[FYContentProvider shared] stopResourceLoadingFromURL:self.originalURL cachedFilePath:_cachedFilePath];
+	[[FYContentProvider shared] stopResourceLoadingFromURL:self.originalURL cachedFilePath:_cachedFilePath
+									resourceLoader:self.resourceLoader];
 }
 
 #pragma mark - Private
