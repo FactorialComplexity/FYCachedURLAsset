@@ -15,7 +15,7 @@ typedef void (^FYSuccessWithETagBlock) (NSString *etag);
 typedef void (^FYFailureBlock) (NSError *error, NSInteger statusCode);
 typedef void (^FYResourceChangedBlock) ();
 
-@interface FYDownloadSession : NSObject
+@interface FYDownloadRequest : NSObject
 
 /**
  *  Queue on which callbacks should be called.
@@ -31,11 +31,6 @@ typedef void (^FYResourceChangedBlock) ();
  *  Offset from which data has been downloaded.
  */
 @property (nonatomic, readonly) NSInteger offset;
-
-/**
- *  Data that was downloaded in current session.
- */
-@property (nonatomic, readonly) NSData *downloadedData;
 
 /**
  *  Date on which latest connection has been made.
@@ -81,20 +76,7 @@ typedef void (^FYResourceChangedBlock) ();
 /**
  *  Fetches etag for given resource URL with provided callbacks
  */
-- (void)fetchEntityTagForResourceWithSuccess:(FYSuccessWithETagBlock)success
-									 failure:(FYFailureBlock)failure;
-
-// TODO: Implement these methods.
-///**
-// *  Starts loading content from beggining.
-// */
-//- (void)startLoading;
-//
-///**
-// *  Begins loading content from given URL from supplied offset for specific entity.
-// *	If loading is currently in progress -> it will be restarted.
-// */
-//- (void)continueLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)tag;
+- (void)fetchEntityTagForResourceWithSuccess:(FYSuccessWithETagBlock)success failure:(FYFailureBlock)failure;
 
 - (void)startLoadingFromOffset:(NSInteger)offset entityTag:(NSString *)etag;
 - (void)startLoadingFrom:(NSInteger)from to:(NSInteger)to entityTag:(NSString *)etag; // TODO: Not integrated/tested.

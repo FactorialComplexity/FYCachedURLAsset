@@ -14,29 +14,20 @@
 		7D3E4F2F1AE9053600F8B91D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F241AE9053600F8B91D /* AppDelegate.m */; };
 		7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F261AE9053600F8B91D /* HomeViewController.m */; };
 		7D3E4F351AE905A000F8B91D /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3E4F341AE905A000F8B91D /* AVFoundation.framework */; };
-		7D3E4F3A1AE906A400F8B91D /* FYCachedURLAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */; };
 		7D3E4F771AE91C6400F8B91D /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3E4F761AE91C6300F8B91D /* MobileCoreServices.framework */; };
 		7D9E79A71AE9438D0026F570 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */; };
 		7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79AB1AEA43810026F570 /* MediaCell.m */; };
-		7D9E79B21AEA79B70026F570 /* FYContentProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79B11AEA79B70026F570 /* FYContentProvider.m */; };
 		7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05E41AEE824400AE6E9F /* ProgressView.m */; };
-		7DFB05EB1AF0CE8400AE6E9F /* FYDownloadSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */; };
-		7DFB05F11AF101C000AE6E9F /* FYContentProvider+Classes.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05F01AF101C000AE6E9F /* FYContentProvider+Classes.m */; };
+		EF7579951AF25EF300D8FE90 /* FYCachedURLAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579941AF25EF300D8FE90 /* FYCachedURLAsset.m */; };
+		EF75799F1AF25F9A00D8FE90 /* FYContentProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = EF75799E1AF25F9A00D8FE90 /* FYContentProvider.m */; };
+		EF7579AA1AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579A91AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m */; };
+		EF7579AD1AF3766C00D8FE90 /* FYSerialContentLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579AC1AF3766C00D8FE90 /* FYSerialContentLoader.m */; };
+		EF7579B01AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579AF1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m */; };
+		EF7579B61AF394E000D8FE90 /* FYRandomAccessContentLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579B51AF394E000D8FE90 /* FYRandomAccessContentLoader.m */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		7D3E4F0A1AE9044300F8B91D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7D3E4EE81AE9044300F8B91D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7D3E4EEF1AE9044300F8B91D;
-			remoteInfo = FYCachedUrlAsset;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		7D3E4EF01AE9044300F8B91D /* FYCachedUrlAsset.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FYCachedUrlAsset.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7D3E4F091AE9044300F8B91D /* FYCachedUrlAssetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FYCachedUrlAssetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D3E4F1C1AE9053600F8B91D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		7D3E4F1E1AE9053600F8B91D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		7D3E4F1F1AE9053600F8B91D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -46,22 +37,26 @@
 		7D3E4F241AE9053600F8B91D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		7D3E4F251AE9053600F8B91D /* HomeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HomeViewController.h; sourceTree = "<group>"; };
 		7D3E4F261AE9053600F8B91D /* HomeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HomeViewController.m; sourceTree = "<group>"; };
-		7D3E4F291AE9053600F8B91D /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7D3E4F341AE905A000F8B91D /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		7D3E4F381AE906A400F8B91D /* FYCachedURLAsset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FYCachedURLAsset.h; path = Sources/FYCachedURLAsset.h; sourceTree = "<group>"; };
-		7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYCachedURLAsset.m; path = Sources/FYCachedURLAsset.m; sourceTree = "<group>"; };
 		7D3E4F761AE91C6300F8B91D /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		7D9E79AA1AEA43810026F570 /* MediaCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaCell.h; sourceTree = "<group>"; };
 		7D9E79AB1AEA43810026F570 /* MediaCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MediaCell.m; sourceTree = "<group>"; };
-		7D9E79AF1AEA79A90026F570 /* FYContentProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FYContentProvider.h; path = Sources/FYContentProvider.h; sourceTree = "<group>"; };
-		7D9E79B11AEA79B70026F570 /* FYContentProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYContentProvider.m; path = Sources/FYContentProvider.m; sourceTree = "<group>"; };
 		7DFB05E31AEE824400AE6E9F /* ProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgressView.h; sourceTree = "<group>"; };
 		7DFB05E41AEE824400AE6E9F /* ProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProgressView.m; sourceTree = "<group>"; };
-		7DFB05E91AF0CE8400AE6E9F /* FYDownloadSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FYDownloadSession.h; path = Sources/FYDownloadSession.h; sourceTree = "<group>"; };
-		7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FYDownloadSession.m; path = Sources/FYDownloadSession.m; sourceTree = "<group>"; };
-		7DFB05EF1AF101C000AE6E9F /* FYContentProvider+Classes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "FYContentProvider+Classes.h"; path = "Sources/FYContentProvider+Classes.h"; sourceTree = "<group>"; };
-		7DFB05F01AF101C000AE6E9F /* FYContentProvider+Classes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "FYContentProvider+Classes.m"; path = "Sources/FYContentProvider+Classes.m"; sourceTree = "<group>"; };
+		EF7579931AF25EF300D8FE90 /* FYCachedURLAsset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYCachedURLAsset.h; sourceTree = "<group>"; };
+		EF7579941AF25EF300D8FE90 /* FYCachedURLAsset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYCachedURLAsset.m; sourceTree = "<group>"; };
+		EF75799D1AF25F9A00D8FE90 /* FYContentProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYContentProvider.h; sourceTree = "<group>"; };
+		EF75799E1AF25F9A00D8FE90 /* FYContentProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYContentProvider.m; sourceTree = "<group>"; };
+		EF7579A81AF2935300D8FE90 /* NSHTTPURLResponse+Headers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSHTTPURLResponse+Headers.h"; sourceTree = "<group>"; };
+		EF7579A91AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSHTTPURLResponse+Headers.m"; sourceTree = "<group>"; };
+		EF7579AB1AF3766C00D8FE90 /* FYSerialContentLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYSerialContentLoader.h; sourceTree = "<group>"; };
+		EF7579AC1AF3766C00D8FE90 /* FYSerialContentLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYSerialContentLoader.m; sourceTree = "<group>"; };
+		EF7579AE1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AVAssetResourceLoadingDataRequest+Info.h"; sourceTree = "<group>"; };
+		EF7579AF1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AVAssetResourceLoadingDataRequest+Info.m"; sourceTree = "<group>"; };
+		EF7579B11AF3821A00D8FE90 /* FYCachedURLAssetLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYCachedURLAssetLog.h; sourceTree = "<group>"; };
+		EF7579B41AF394E000D8FE90 /* FYRandomAccessContentLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYRandomAccessContentLoader.h; sourceTree = "<group>"; };
+		EF7579B51AF394E000D8FE90 /* FYRandomAccessContentLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYRandomAccessContentLoader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,13 +70,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7D3E4F061AE9044300F8B91D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,7 +77,6 @@
 			isa = PBXGroup;
 			children = (
 				7D3E4F331AE9053B00F8B91D /* FYCachedURLAsset */,
-				7D3E4F271AE9053600F8B91D /* Tests */,
 				7D3E4F361AE905A700F8B91D /* Frameworks */,
 				7D3E4EF11AE9044300F8B91D /* Products */,
 			);
@@ -99,7 +86,6 @@
 			isa = PBXGroup;
 			children = (
 				7D3E4EF01AE9044300F8B91D /* FYCachedUrlAsset.app */,
-				7D3E4F091AE9044300F8B91D /* FYCachedUrlAssetTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,18 +112,10 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
-		7D3E4F271AE9053600F8B91D /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				7D3E4F291AE9053600F8B91D /* Info.plist */,
-			);
-			path = Tests;
-			sourceTree = "<group>";
-		};
 		7D3E4F331AE9053B00F8B91D /* FYCachedURLAsset */ = {
 			isa = PBXGroup;
 			children = (
-				7D3E4F371AE9063700F8B91D /* Model */,
+				EF7579921AF25EF300D8FE90 /* FYCachedURLAsset */,
 				7D3E4F221AE9053600F8B91D /* Sources */,
 				7D3E4F1A1AE9053600F8B91D /* Resources */,
 			);
@@ -152,21 +130,6 @@
 				7D3E4F341AE905A000F8B91D /* AVFoundation.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		7D3E4F371AE9063700F8B91D /* Model */ = {
-			isa = PBXGroup;
-			children = (
-				7D3E4F381AE906A400F8B91D /* FYCachedURLAsset.h */,
-				7D3E4F391AE906A400F8B91D /* FYCachedURLAsset.m */,
-				7D9E79AF1AEA79A90026F570 /* FYContentProvider.h */,
-				7D9E79B11AEA79B70026F570 /* FYContentProvider.m */,
-				7DFB05EF1AF101C000AE6E9F /* FYContentProvider+Classes.h */,
-				7DFB05F01AF101C000AE6E9F /* FYContentProvider+Classes.m */,
-				7DFB05E91AF0CE8400AE6E9F /* FYDownloadSession.h */,
-				7DFB05EA1AF0CE8400AE6E9F /* FYDownloadSession.m */,
-			);
-			name = Model;
 			sourceTree = "<group>";
 		};
 		7D9E79A81AEA436C0026F570 /* UI */ = {
@@ -198,6 +161,26 @@
 			name = Views;
 			sourceTree = "<group>";
 		};
+		EF7579921AF25EF300D8FE90 /* FYCachedURLAsset */ = {
+			isa = PBXGroup;
+			children = (
+				EF7579B11AF3821A00D8FE90 /* FYCachedURLAssetLog.h */,
+				EF7579A81AF2935300D8FE90 /* NSHTTPURLResponse+Headers.h */,
+				EF7579A91AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m */,
+				EF7579AE1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.h */,
+				EF7579AF1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m */,
+				EF7579AB1AF3766C00D8FE90 /* FYSerialContentLoader.h */,
+				EF7579AC1AF3766C00D8FE90 /* FYSerialContentLoader.m */,
+				EF7579B41AF394E000D8FE90 /* FYRandomAccessContentLoader.h */,
+				EF7579B51AF394E000D8FE90 /* FYRandomAccessContentLoader.m */,
+				EF75799D1AF25F9A00D8FE90 /* FYContentProvider.h */,
+				EF75799E1AF25F9A00D8FE90 /* FYContentProvider.m */,
+				EF7579931AF25EF300D8FE90 /* FYCachedURLAsset.h */,
+				EF7579941AF25EF300D8FE90 /* FYCachedURLAsset.m */,
+			);
+			path = FYCachedURLAsset;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -218,24 +201,6 @@
 			productReference = 7D3E4EF01AE9044300F8B91D /* FYCachedUrlAsset.app */;
 			productType = "com.apple.product-type.application";
 		};
-		7D3E4F081AE9044300F8B91D /* FYCachedUrlAssetTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7D3E4F161AE9044300F8B91D /* Build configuration list for PBXNativeTarget "FYCachedUrlAssetTests" */;
-			buildPhases = (
-				7D3E4F051AE9044300F8B91D /* Sources */,
-				7D3E4F061AE9044300F8B91D /* Frameworks */,
-				7D3E4F071AE9044300F8B91D /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				7D3E4F0B1AE9044300F8B91D /* PBXTargetDependency */,
-			);
-			name = FYCachedUrlAssetTests;
-			productName = FYCachedUrlAssetTests;
-			productReference = 7D3E4F091AE9044300F8B91D /* FYCachedUrlAssetTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -248,13 +213,9 @@
 					7D3E4EEF1AE9044300F8B91D = {
 						CreatedOnToolsVersion = 6.2;
 					};
-					7D3E4F081AE9044300F8B91D = {
-						CreatedOnToolsVersion = 6.2;
-						TestTargetID = 7D3E4EEF1AE9044300F8B91D;
-					};
 				};
 			};
-			buildConfigurationList = 7D3E4EEB1AE9044300F8B91D /* Build configuration list for PBXProject "FYCachedUrlAsset" */;
+			buildConfigurationList = 7D3E4EEB1AE9044300F8B91D /* Build configuration list for PBXProject "FYCachedURLAssetTest" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -268,7 +229,6 @@
 			projectRoot = "";
 			targets = (
 				7D3E4EEF1AE9044300F8B91D /* FYCachedUrlAsset */,
-				7D3E4F081AE9044300F8B91D /* FYCachedUrlAssetTests */,
 			);
 		};
 /* End PBXProject section */
@@ -284,13 +244,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7D3E4F071AE9044300F8B91D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -298,34 +251,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7D3E4F3A1AE906A400F8B91D /* FYCachedURLAsset.m in Sources */,
-				7DFB05EB1AF0CE8400AE6E9F /* FYDownloadSession.m in Sources */,
-				7DFB05F11AF101C000AE6E9F /* FYContentProvider+Classes.m in Sources */,
+				EF7579B61AF394E000D8FE90 /* FYRandomAccessContentLoader.m in Sources */,
 				7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */,
 				7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */,
 				7D3E4F2F1AE9053600F8B91D /* AppDelegate.m in Sources */,
-				7D9E79B21AEA79B70026F570 /* FYContentProvider.m in Sources */,
+				EF7579AA1AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m in Sources */,
+				EF7579B01AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m in Sources */,
+				EF7579AD1AF3766C00D8FE90 /* FYSerialContentLoader.m in Sources */,
+				EF75799F1AF25F9A00D8FE90 /* FYContentProvider.m in Sources */,
+				EF7579951AF25EF300D8FE90 /* FYCachedURLAsset.m in Sources */,
 				7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */,
 				7D3E4F2E1AE9053600F8B91D /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7D3E4F051AE9044300F8B91D /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		7D3E4F0B1AE9044300F8B91D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7D3E4EEF1AE9044300F8B91D /* FYCachedUrlAsset */;
-			targetProxy = 7D3E4F0A1AE9044300F8B91D /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		7D3E4F1B1AE9053600F8B91D /* LaunchScreen.xib */ = {
@@ -455,44 +395,10 @@
 			};
 			name = Release;
 		};
-		7D3E4F171AE9044300F8B91D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FYCachedUrlAsset.app/FYCachedUrlAsset";
-			};
-			name = Debug;
-		};
-		7D3E4F181AE9044300F8B91D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FYCachedUrlAsset.app/FYCachedUrlAsset";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7D3E4EEB1AE9044300F8B91D /* Build configuration list for PBXProject "FYCachedUrlAsset" */ = {
+		7D3E4EEB1AE9044300F8B91D /* Build configuration list for PBXProject "FYCachedURLAssetTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7D3E4F111AE9044300F8B91D /* Debug */,
@@ -506,15 +412,6 @@
 			buildConfigurations = (
 				7D3E4F141AE9044300F8B91D /* Debug */,
 				7D3E4F151AE9044300F8B91D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		7D3E4F161AE9044300F8B91D /* Build configuration list for PBXNativeTarget "FYCachedUrlAssetTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7D3E4F171AE9044300F8B91D /* Debug */,
-				7D3E4F181AE9044300F8B91D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

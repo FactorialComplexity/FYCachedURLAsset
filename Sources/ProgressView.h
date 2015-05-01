@@ -8,16 +8,13 @@
 
 @import UIKit;
 
+#import "FYCachedURLAsset.h"
+
 /**
  *  Non-flexible class for visualization purposes.
  */
 @interface ProgressView : UIView
 
-@property (nonatomic) NSInteger startOffsetProgress;
-@property (nonatomic) NSInteger locallyPresented;
-@property (nonatomic) NSInteger currentProgress;
-@property (nonatomic) NSInteger totalProgress;
-
-- (void)flush;
+- (void)updateWithCacheInfo:(FYCachedURLAssetCacheInfo)info;
 
 @end

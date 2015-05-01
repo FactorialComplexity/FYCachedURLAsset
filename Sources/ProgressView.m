@@ -9,46 +9,44 @@
 #import "ProgressView.h"
 
 @implementation ProgressView
+{
+	FYCachedURLAssetCacheInfo _info;
+}
 
 #pragma mark - Public
 
-- (void)flush {
+- (void)updateWithCacheInfo:(FYCachedURLAssetCacheInfo)info {
+	_info = info;
 	[self setNeedsDisplay];
 }
 
 #pragma mark - Drawing
 
 - (void)drawRect:(CGRect)rect {
+	CGRect bounds = self.bounds;
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
 	
 	[[UIColor grayColor] setFill];
 	CGContextFillRect(ctx, rect);
 	
-	if (self.totalProgress == 0) {
-		return;
-	}
-	
-	CGFloat localToFill = (float)self.locallyPresented / self.totalProgress;
-	CGFloat howMuchToFill = (float)self.currentProgress / self.totalProgress;
-	
-	CGRect localRect = (CGRect) {
+	CGRect availableDataRect = (CGRect) {
 		0,
 		0,
-		CGRectGetWidth(rect) * localToFill,
-		CGRectGetHeight(rect)
+		CGRectGetWidth(bounds) * ((float)_info.availableData / (float)_info.contentLength),
+		CGRectGetHeight(bounds)
 	};
 	
-	CGRect progressRect = (CGRect) {
-		(float)self.startOffsetProgress / self.totalProgress * CGRectGetWidth(rect),
+	CGRect availableDataOnDiskRect = (CGRect) {
 		0,
-		CGRectGetWidth(rect) * howMuchToFill,
-		CGRectGetHeight(rect)
+		0,
+		CGRectGetWidth(bounds) * ((float)_info.availableDataOnDisk / (float)_info.contentLength),
+		CGRectGetHeight(bounds)
 	};
 	
-	[[UIColor greenColor] setFill];
-	CGContextFillRect(ctx, localRect);
 	[[UIColor blueColor] setFill];
-	CGContextFillRect(ctx, progressRect);
+	CGContextFillRect(ctx, availableDataRect);
+	[[UIColor greenColor] setFill];
+	CGContextFillRect(ctx, availableDataOnDiskRect);
 }
 
 @end
