@@ -25,6 +25,8 @@
 	
 	NSMutableSet* _loadingRequests;
 	
+	NSError* _downloadingError;
+	
 	__weak id<FYSerialContentLoaderDelegate> _delegate;
 }
 
@@ -201,6 +203,8 @@
 					if (!request.isFinished)
 						[sself scheduleNextChunkFromDiskForRequest:request];
 				}
+				
+				[sself finishLoadingRequestsIfDownloadingError];
 			});
 		});
 	}
@@ -227,6 +231,31 @@
 	}
 }
 
+- (void)finishLoadingRequestsIfDownloadingError
+{
+	if (_downloadingError)
+	{
+		NSSet* loadingRequestsCopy = [NSSet setWithSet:_loadingRequests];
+		for (AVAssetResourceLoadingRequest* request in loadingRequestsCopy)
+		{
+			if (request.dataRequest.currentOffset == _availableDataOnDisk && !request.dataRequest.isAllDataProvided)
+			{
+				// request is waiting for data from network
+				// since we have error, we report that it is not available
+				[request finishLoadingWithError:_downloadingError];
+				[_loadingRequests removeObject:request];
+			}
+		}
+	}
+}
+
+- (void)setDownloadingError:(NSError*)error
+{
+	_downloadingError = error;
+	_connection = nil;
+	[self finishLoadingRequestsIfDownloadingError];
+}
+
 #pragma mark - NSURLConnectionDelegate
 
 - (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSHTTPURLResponse*)response
@@ -241,8 +270,12 @@
 		[self setContentType:[response headerValueForKey:@"Content-Type"]
 			contentLength:_availableData + response.expectedContentLength];
 	}
-	
-	// TODO: error processing
+	else
+	{
+		[self setDownloadingError:[[NSError alloc] initWithDomain:@"FYCachedURLAsset" code:response.statusCode
+			userInfo:@{ NSLocalizedDescriptionKey: [NSString stringWithFormat:NSLocalizedString(@"Web server responded with HTTP error code %d", @""),
+			(int)response.statusCode] }]];
+	}
 }
 
 - (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)chunk
@@ -323,7 +356,7 @@
 
 - (void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-	// TODO: error processing
+	[self setDownloadingError:error];
 	[self stopDownloading];
 }
 

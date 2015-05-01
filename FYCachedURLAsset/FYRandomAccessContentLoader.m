@@ -60,6 +60,13 @@
 	_connection = nil;
 }
 
+- (void)setDownloadingError:(NSError*)error
+{
+	_connection = nil;
+	[_loadingRequest finishLoadingWithError:error];
+	[_delegate randomAccessContentLoaderDidFinishLoading:self];
+}
+
 #pragma mark - NSURLConnectionDelegate
 
 - (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSHTTPURLResponse*)response
@@ -72,8 +79,12 @@
 		if (_loadingRequest.contentInformationRequest)
 			_loadingRequest.contentInformationRequest.contentType = [response headerValueForKey:@"Content-Type"];
 	}
-	
-	// TODO: error processing
+	else
+	{
+		[self setDownloadingError:[[NSError alloc] initWithDomain:@"FYCachedURLAsset" code:response.statusCode
+			userInfo:@{ NSLocalizedDescriptionKey: [NSString stringWithFormat:NSLocalizedString(@"Web server responded with HTTP error code %d", @""),
+			(int)response.statusCode] }]];
+	}
 }
 
 - (void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)chunk
@@ -104,12 +115,14 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection*)connection
 {
-	
+	[_loadingRequest finishLoading];
+	_connection = nil;
+	[_delegate randomAccessContentLoaderDidFinishLoading:self];
 }
 
 - (void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error
 {
-	// TODO: error processing
+	[self setDownloadingError:error];
 }
 
 @end
