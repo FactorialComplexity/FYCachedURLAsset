@@ -8,14 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-//#if CACHED_URL_ASSET_DEBUG_LOG || CACHED_URL_ASSET_VERBOSE_LOG
+#if CACHED_URL_ASSET_DEBUG_LOG || CACHED_URL_ASSET_VERBOSE_LOG
 #	define FYLogD(fmt, ...) NSLog((@"(FYCachedURLAsset) D " fmt), ##__VA_ARGS__)
-//#else
-//#   define FYLogD(...)
-//#endif
+#else
+#   define FYLogD(...)
+#endif
 
 #if CACHED_URL_ASSET_VERBOSE_LOG
-#	define FYLogV(fmt, ...) NSLog((@"(FYCachedURLAsset) D " fmt), ##__VA_ARGS__)
+#	define FYLogV(fmt, ...) NSLog((@"(FYCachedURLAsset) V " fmt), ##__VA_ARGS__)
 #else
 #	define FYLogV(fmt, ...)
 #endif
