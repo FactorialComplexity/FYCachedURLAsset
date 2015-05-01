@@ -62,7 +62,7 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 
 - (void)dealloc
 {
-	FYLogD(@"ASSET DEALLOC\n   URL: %@\n  cacheFilePath: %@", _contentProvider.URL, _contentProvider.cacheFilePath);
+	FYLogD(@"[FYCachedURLAsset dealloc]\n   URL: %@\n  cacheFilePath: %@", _contentProvider.URL, _contentProvider.cacheFilePath);
 }
 
 #pragma mark - Private

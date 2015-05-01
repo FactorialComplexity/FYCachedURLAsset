@@ -43,4 +43,6 @@ typedef NS_ENUM(NSInteger, FYContentState)
 - (void)addLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest;
 - (void)removeLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest;
 
+- (void)stopDownloading;
+
 @end

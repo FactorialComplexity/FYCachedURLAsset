@@ -25,7 +25,7 @@
 	
 	NSMutableSet* _loadingRequests;
 	
-	id<FYSerialContentLoaderDelegate> _delegate;
+	__weak id<FYSerialContentLoaderDelegate> _delegate;
 }
 
 @end
@@ -90,6 +90,11 @@
 	}
 	
 	return self;
+}
+
+- (void)dealloc
+{
+	FYLogD(@"[FYSerialContentLoader dealloc]\n   URL: %@\n  cacheFilePath: %@", _URL, _cacheFilePath);
 }
 
 - (void)startDownloading
@@ -167,27 +172,34 @@
 	AVAssetResourceLoadingDataRequest* dataRequest = request.dataRequest;
 	if (dataRequest.currentOffset < _availableDataOnDisk)
 	{
+		__weak typeof(self) wself = self;
 		dispatch_async(_workQueue, ^
 		{
-			// TODO: check against total length
-			
-			[_file seekToFileOffset:dataRequest.currentOffset];
-			NSData* chunk = [_file readDataOfLength:MIN(MIN(_availableDataOnDisk, dataRequest.leftLength), 512*1024)];
+			typeof(self) sself = wself;
+			if (!sself)
+				return;
+		
+			[sself->_file seekToFileOffset:dataRequest.currentOffset];
+			NSData* chunk = [sself->_file readDataOfLength:MIN(MIN(sself->_availableDataOnDisk, dataRequest.leftLength), 512*1024)];
 			
 			dispatch_sync(dispatch_get_main_queue(), ^
 			{
-				if ([_loadingRequests containsObject:request]) // if we still need this request
+				typeof(self) sself = wself;
+				if (!sself)
+					return;
+				
+				if ([sself->_loadingRequests containsObject:request]) // if we still need this request
 				{
 					[dataRequest respondWithData:chunk];
 					
 					FYLogV(@"SERIAL LOADER DATA FROM DISK\n  URL: %@\n  request: %llx\n  length: %lld\n  progress:  %lld of %lld",
-						_URL, (long long)request, (long long)[chunk length], (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),
+						sself->_URL, (long long)request, (long long)[chunk length], (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),
 						(long long)dataRequest.requestedLength);
 					
-					[self checkRequestForCompletion:request];
+					[sself checkRequestForCompletion:request];
 					
 					if (!request.isFinished)
-						[self scheduleNextChunkFromDiskForRequest:request];
+						[sself scheduleNextChunkFromDiskForRequest:request];
 				}
 			});
 		});
@@ -239,32 +251,42 @@
 //		_URL, (long long)[chunk length], _availableData + [chunk length], _contentLength);
 
 	_availableData += [chunk length];
+	
+	__weak typeof(self) wself = self;
 	dispatch_async(_workQueue, ^
 	{
-		[_file seekToEndOfFile];
-		[_file writeData:chunk];
+		typeof(self) sself = wself;
+		if (!sself)
+			return;
+	
+		[sself->_file seekToEndOfFile];
+		[sself->_file writeData:chunk];
 		
 		dispatch_sync(dispatch_get_main_queue(), ^
 		{
-			long long previousAvailableDataOnDisk = _availableDataOnDisk;
-			_availableDataOnDisk += [chunk length];
+			typeof(self) sself = wself;
+			if (!sself)
+				return;
+				
+			long long previousAvailableDataOnDisk = sself->_availableDataOnDisk;
+			sself->_availableDataOnDisk += [chunk length];
 			
-			if (_availableDataOnDisk == _contentLength)
+			if (sself->_availableDataOnDisk == sself->_contentLength)
 			{
 				FYLogI(@"SERIAL LOADER COMPLETED DOWNLOAD\n  URL: %@\n  Content-Length: %lld",
-					_URL, _contentLength);
+					sself->_URL, sself->_contentLength);
 				
-				[self stopDownloading];
+				[sself stopDownloading];
 			
 				NSError* error = nil;
-				if (![[NSFileManager defaultManager] moveItemAtPath:[_cacheFilePath stringByAppendingString:@"~part"] toPath:_cacheFilePath error:&error])
+				if (![[NSFileManager defaultManager] moveItemAtPath:[sself->_cacheFilePath stringByAppendingString:@"~part"] toPath:sself->_cacheFilePath error:&error])
 					FYLogE(@"SERIAL LOADER FAILED FILE MOVE\n  from: %@\n  to: %@\n  error: %@",
-						[_cacheFilePath stringByAppendingString:@"~part"], _cacheFilePath, error);
+						[sself->_cacheFilePath stringByAppendingString:@"~part"], sself->_cacheFilePath, error);
 				else
-					_file = [NSFileHandle fileHandleForUpdatingAtPath:_cacheFilePath];
+					sself->_file = [NSFileHandle fileHandleForUpdatingAtPath:sself->_cacheFilePath];
 			}
 			
-			NSSet* loadingRequestsCopy = [NSSet setWithSet:_loadingRequests];
+			NSSet* loadingRequestsCopy = [NSSet setWithSet:sself->_loadingRequests];
 			for (AVAssetResourceLoadingRequest* request in loadingRequestsCopy)
 			{
 				AVAssetResourceLoadingDataRequest* dataRequest = request.dataRequest;
@@ -276,18 +298,18 @@
 						[dataRequest respondWithData:[chunk subdataWithRange:NSMakeRange(0, dataRequest.leftLength)]];
 					
 					FYLogV(@"SERIAL LOADER DATA FROM NETWORK\n  URL: %@\n  request: %llx\n  length: %lld\n  progress:  %lld of %lld",
-						_URL, (long long)request, MIN((long long)[chunk length], dataRequest.leftLength), (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),
+						sself->_URL, (long long)request, MIN((long long)[chunk length], dataRequest.leftLength), (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),
 						(long long)dataRequest.requestedLength);
 					
-					[self checkRequestForCompletion:request];
+					[sself checkRequestForCompletion:request];
 				}
 				else if (dataRequest.currentOffset >= previousAvailableDataOnDisk &&
-					dataRequest.currentOffset < _availableDataOnDisk)
+					dataRequest.currentOffset < sself->_availableDataOnDisk)
 				{
 					// this request was previosly paused because we didn't have enough data,
 					// but now we have it, although it is not aligned with current http request,
 					// so we need to start disk fetching first
-					[self scheduleNextChunkFromDiskForRequest:request];
+					[sself scheduleNextChunkFromDiskForRequest:request];
 				}
 			}
 		});

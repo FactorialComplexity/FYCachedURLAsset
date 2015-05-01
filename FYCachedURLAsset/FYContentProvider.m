@@ -50,6 +50,15 @@
 	return self;
 }
 
+- (void)dealloc
+{
+	[_serialContentLoader stopDownloading];
+	for (FYRandomAccessContentLoader* loader in _randomAccessLoaders)
+		[loader cancel];
+	
+	FYLogD(@"[FYContentProvider dealloc]\n   URL: %@\n  cacheFilePath: %@", _URL, _cacheFilePath);
+}
+
 - (void)addResourceLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest
 {
 	if (loadingRequest.dataRequest)

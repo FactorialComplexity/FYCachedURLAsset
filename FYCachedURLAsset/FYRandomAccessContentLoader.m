@@ -13,7 +13,7 @@
 
 @interface FYRandomAccessContentLoader ()
 {
-	id<FYRandomAccessContentLoaderDelegate> _delegate;
+	__weak id<FYRandomAccessContentLoaderDelegate> _delegate;
 	
 	NSURLConnection* _connection;
 }
@@ -49,9 +49,15 @@
 	return self;
 }
 
+- (void)dealloc
+{
+	FYLogD(@"[FYRandomAccessContentLoader dealloc]\n   URL: %@\n  request: %llx", _URL, (long long)_loadingRequest);
+}
+
 - (void)cancel
 {
 	[_connection cancel];
+	_connection = nil;
 }
 
 #pragma mark - NSURLConnectionDelegate
