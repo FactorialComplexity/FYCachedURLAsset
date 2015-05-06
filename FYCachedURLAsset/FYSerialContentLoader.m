@@ -182,7 +182,7 @@
 				return;
 		
 			[sself->_file seekToFileOffset:dataRequest.currentOffset];
-			NSData* chunk = [sself->_file readDataOfLength:MIN(MIN(sself->_availableDataOnDisk, dataRequest.leftLength), 512*1024)];
+			NSData* chunk = [sself->_file readDataOfLength:(NSUInteger)(MIN(MIN(sself->_availableDataOnDisk, dataRequest.leftLength), 512*1024))];
 			
 			dispatch_sync(dispatch_get_main_queue(), ^
 			{
@@ -328,7 +328,7 @@
 					if (dataRequest.leftLength >= chunk.length)
 						[dataRequest respondWithData:chunk];
 					else
-						[dataRequest respondWithData:[chunk subdataWithRange:NSMakeRange(0, dataRequest.leftLength)]];
+						[dataRequest respondWithData:[chunk subdataWithRange:NSMakeRange(0, (NSUInteger)dataRequest.leftLength)]];
 					
 					FYLogV(@"SERIAL LOADER DATA FROM NETWORK\n  URL: %@\n  request: %llx\n  length: %lld\n  progress:  %lld of %lld",
 						sself->_URL, (long long)request, MIN((long long)[chunk length], dataRequest.leftLength), (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),

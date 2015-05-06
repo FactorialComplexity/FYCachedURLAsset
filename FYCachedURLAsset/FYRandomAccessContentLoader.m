@@ -96,7 +96,7 @@
 	if (dataRequest.leftLength >= chunk.length)
 		[dataRequest respondWithData:chunk];
 	else
-		[dataRequest respondWithData:[chunk subdataWithRange:NSMakeRange(0, dataRequest.leftLength)]];
+		[dataRequest respondWithData:[chunk subdataWithRange:NSMakeRange(0, (NSUInteger)dataRequest.leftLength)]];
 	
 	FYLogV(@"RANDOM ACCESS LOADER DATA FROM NETWORK\n  URL: %@\n  request: %llx\n  length: %lld\n  progress:  %lld of %lld",
 		_URL, (long long)_loadingRequest, MIN((long long)[chunk length], dataRequest.leftLength), (long long)(dataRequest.currentOffset - dataRequest.requestedOffset),
