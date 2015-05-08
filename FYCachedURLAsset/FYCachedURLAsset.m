@@ -10,7 +10,7 @@
 #import "FYContentProvider.h"
 #import "FYCachedURLAssetLog.h"
 
-NSString *const FYResourceForURLChangedNotificationName = @"FYResourceForURLChangedNotification";
+NSString *const FYResourceForURLChangedNotification = @"FYResourceForURLChangedNotification";
 NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURLDoesntExistNotification";
 
 @interface FYCachedURLAsset ()
@@ -20,6 +20,8 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 @implementation FYCachedURLAsset
 {
 	FYContentProvider* _contentProvider;
+	NSError* _permanentError;
+	NSString* _cacheFilePath;
 }
 
 #pragma mark - Lifecycle
@@ -40,15 +42,12 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 	{
 		FYLogD(@"ASSET INIT\n  URL: %@\n  cacheFilePath: %@", URL, cacheFilePath);
 		
-		_contentProvider = [FYContentProvider contentProviderWithURL:URL cacheFilePath:cacheFilePath assetResourceLoader:self.resourceLoader];
+		_originalURL = URL;
+		_cacheFilePath = cacheFilePath;
+		_contentProvider = [FYContentProvider contentProviderWithURL:URL cacheFilePath:cacheFilePath asset:self];
 	}
 	
 	return self;
-}
-
-- (NSURL*)originalURL
-{
-	return _contentProvider.URL;
 }
 
 - (FYCachedURLAssetCacheInfo)cacheInfo
@@ -62,7 +61,22 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 
 - (void)dealloc
 {
-	FYLogD(@"[FYCachedURLAsset dealloc]\n   URL: %@\n  cacheFilePath: %@", _contentProvider.URL, _contentProvider.cacheFilePath);
+	FYLogD(@"[FYCachedURLAsset dealloc]\n  URL: %@\n  cacheFilePath: %@", _originalURL, _cacheFilePath);
+}
+
+#pragma mark - FYContentProviderDelegate
+
+- (void)failWithPermanentError:(NSError*)permanentError
+{
+	_contentProvider = nil;
+	_permanentError = permanentError;
+	
+	if ([[_permanentError domain] isEqualToString:@"FYCachedURLAsset"] &&
+		[_permanentError code] == kFYResourceForURLChangedErrorCode)
+	{
+		// resource updated
+		[[NSNotificationCenter defaultCenter] postNotificationName:FYResourceForURLChangedNotification object:self];
+	}
 }
 
 #pragma mark - Private

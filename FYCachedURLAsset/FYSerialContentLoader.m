@@ -7,6 +7,8 @@
 //
 
 #import "FYSerialContentLoader.h"
+#import "FYContentProvider.h"
+#import "FYHEADRequest.h"
 #import "NSHTTPURLResponse+Headers.h"
 #import "AVAssetResourceLoadingDataRequest+Info.h"
 #import "FYCachedURLAssetLog.h"
@@ -21,6 +23,7 @@
 	long long _availableData;
 	
 	NSURLConnection* _connection;
+	FYHEADRequest* _headRequest;
 	dispatch_queue_t _workQueue;
 	
 	NSMutableSet* _loadingRequests;
@@ -69,6 +72,9 @@
 			_contentState = FYContentStateFull;
 			_file = [NSFileHandle fileHandleForUpdatingAtPath:_cacheFilePath];
 			_contentLength = _availableData = _availableDataOnDisk = [_file seekToEndOfFile];
+			
+			// send HEAD request to detect resource update
+			[self sendHEADRequest];
 		}
 		else if ([fm fileExistsAtPath:[_cacheFilePath stringByAppendingString:@"~part"]])
 		{
@@ -96,6 +102,8 @@
 
 - (void)dealloc
 {
+	[_headRequest cancel];
+	
 	FYLogD(@"[FYSerialContentLoader dealloc]\n   URL: %@\n  cacheFilePath: %@", _URL, _cacheFilePath);
 }
 
@@ -125,6 +133,59 @@
 	
 	[_connection cancel];
 	_connection = nil;
+}
+
+- (void)sendHEADRequest
+{
+	__weak typeof(self) wself = self;
+	_headRequest = [[FYHEADRequest alloc] initWithURL:_URL completion:^(NSHTTPURLResponse *response, NSError *error)
+	{
+		typeof(self) sself = wself;
+		if (!sself)
+			return;
+		
+		sself->_headRequest = nil;
+		
+		if (response)
+		{
+			[sself setContentType:sself->_contentType contentLength:sself->_contentLength eTag:[response headerValueForKey:@"ETag"]];
+		}
+		else
+		{
+			// TODO: retry?
+		}
+	}];
+}
+
+- (void)removeCacheAndStopAllRequestsWithError:(NSError*)cacheError
+{
+	[self stopDownloading];
+	
+	for (AVAssetResourceLoadingRequest* request in _loadingRequests)
+	{
+		[request finishLoadingWithError:cacheError];
+	}
+	[_loadingRequests removeAllObjects];
+	
+	NSError* error;
+	NSFileManager* fm = [NSFileManager defaultManager];
+	[fm removeItemAtPath:_cacheFilePath error:&error];
+	[fm removeItemAtPath:[_cacheFilePath stringByAppendingString:@"~part"] error:&error];
+	[fm removeItemAtPath:[_cacheFilePath stringByAppendingString:@"~meta"] error:&error];
+	
+	[fm createFileAtPath:[_cacheFilePath stringByAppendingString:@"~part"] contents:nil attributes:nil];
+	
+	_contentState = FYContentStateNotLoaded;
+	_hasContentInformation = NO;
+	_availableData = 0;
+	_contentType = nil;
+	_eTag = nil;
+	
+	@synchronized (self)
+	{
+		_file = [NSFileHandle fileHandleForUpdatingAtPath:[_cacheFilePath stringByAppendingString:@"~part"]];
+		_availableDataOnDisk = 0;
+	}
 }
 
 - (void)addLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest
@@ -180,9 +241,22 @@
 			typeof(self) sself = wself;
 			if (!sself)
 				return;
-		
-			[sself->_file seekToFileOffset:dataRequest.currentOffset];
-			NSData* chunk = [sself->_file readDataOfLength:(NSUInteger)(MIN(MIN(sself->_availableDataOnDisk, dataRequest.leftLength), 512*1024))];
+			
+			NSFileHandle* file;
+			long long availableDataOnDisk;
+			NSData* chunk = nil;
+			
+			@synchronized (self)
+			{
+				file = sself->_file;
+				availableDataOnDisk = sself->_availableDataOnDisk;
+			}
+			
+			if (file)
+			{
+				[file seekToFileOffset:dataRequest.currentOffset];
+				chunk = [file readDataOfLength:(NSUInteger)(MIN(MIN(availableDataOnDisk, dataRequest.leftLength), 512*1024))];
+			}
 			
 			dispatch_sync(dispatch_get_main_queue(), ^
 			{
@@ -210,18 +284,42 @@
 	}
 }
 
-- (void)setContentType:(NSString*)contentType contentLength:(long long)contentLength
+- (void)setContentType:(NSString*)contentType contentLength:(long long)contentLength eTag:(NSString*)eTag
 {
+	if (_hasContentInformation && ![_eTag isEqualToString:eTag])
+	{
+		// ETag changed and cached content should be invalidated
+		FYLogD(@"SERIAL LOADER CACHE INVALIDATED\n  URL: %@\n  ETag (old): %@\n  ETag (new): %@",
+			_URL, _eTag, eTag);
+		
+		NSError* cacheError = [[NSError alloc] initWithDomain:@"FYCachedURLAsset" code:kFYResourceForURLChangedErrorCode
+			userInfo:@{
+				NSLocalizedDescriptionKey: [NSString stringWithFormat:NSLocalizedString(@"Resource changed on server", @"")],
+				@"ETag_Old": _eTag ? _eTag : [NSNull null],
+				@"ETag_New": eTag ? eTag : [NSNull null],
+			}];
+		
+		[self removeCacheAndStopAllRequestsWithError:cacheError];
+		[_delegate serialContentLoaderDidInvalidateCache:self withError:cacheError];
+		
+		return;
+	}
+
 	if (![_contentType isEqualToString:contentType] || _contentLength != contentLength)
 	{
+		_hasContentInformation = YES;
+	
 		_contentLength = contentLength;
 		_contentType = contentType;
+		_eTag = eTag;
 		
 		NSMutableDictionary* dict = [NSMutableDictionary dictionary];
 		if (_contentLength >= 0)
 			dict[@"Content-Length"] = @(_contentLength);
 		if (_contentType)
 			dict[@"Content-Type"] = _contentType;
+		if (_eTag)
+			dict[@"ETag"] = _eTag;
 		
 		NSError* error;
 		[[NSJSONSerialization dataWithJSONObject:dict options:0 error:&error]
@@ -260,15 +358,17 @@
 
 - (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSHTTPURLResponse*)response
 {
-	FYLogD(@"SERIAL LOADER HTTP RESPONSE HEADER\n  URL: %@\n  statusCode: %d\n  Content-Length: %lld\n  Content-Type: %@",
-		_URL, (int)response.statusCode, response.expectedContentLength, [response headerValueForKey:@"Content-Type"]);
+	FYLogD(@"SERIAL LOADER HTTP RESPONSE HEADER\n  URL: %@\n  statusCode: %d\n  Content-Length: %lld\n  Content-Type: %@\n  ETag: %@",
+		_URL, (int)response.statusCode, response.expectedContentLength,
+		[response headerValueForKey:@"Content-Type"], [response headerValueForKey:@"ETag"]);
 	
 	if (response.statusCode >= 200 && response.statusCode < 300)
 	{
 		// we always request data from whatever we already have available to the very end,
 		// so Content-Length (expectedContentLength) + _availableData is the total length of content
 		[self setContentType:[response headerValueForKey:@"Content-Type"]
-			contentLength:_availableData + response.expectedContentLength];
+			contentLength:_availableData + response.expectedContentLength
+			eTag:[response headerValueForKey:@"ETag"]];
 	}
 	else
 	{

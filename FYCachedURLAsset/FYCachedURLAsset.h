@@ -8,8 +8,8 @@
 
 @import AVFoundation;
 
-extern NSString *const FYResourceForURLChangedNotificationName;
-extern NSString *const FYResourceForURLDoesntExistNotificationName;
+extern NSString *const FYResourceForURLChangedNotification;
+//extern NSString *const FYResourceForURLDoesntExistNotificationName;
 
 typedef struct
 {

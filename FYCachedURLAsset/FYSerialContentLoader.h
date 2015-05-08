@@ -20,6 +20,7 @@ typedef NS_ENUM(NSInteger, FYContentState)
 @protocol FYSerialContentLoaderDelegate <NSObject>
 
 - (void)serialContentLoaderDidUpdateMeta:(FYSerialContentLoader*)loader;
+- (void)serialContentLoaderDidInvalidateCache:(FYSerialContentLoader*)loader withError:(NSError*)error;
 
 @end
 
@@ -42,6 +43,8 @@ typedef NS_ENUM(NSInteger, FYContentState)
 
 - (void)addLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest;
 - (void)removeLoadingRequest:(AVAssetResourceLoadingRequest*)loadingRequest;
+
+- (void)removeCacheAndStopAllRequestsWithError:(NSError*)error;
 
 - (void)stopDownloading;
 

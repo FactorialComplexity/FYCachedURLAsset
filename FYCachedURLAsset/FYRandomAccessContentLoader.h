@@ -12,6 +12,9 @@
 @protocol FYRandomAccessContentLoaderDelegate <NSObject>
 
 - (void)randomAccessContentLoaderDidFinishLoading:(FYRandomAccessContentLoader*)loader;
+- (void)randomAccessContentLoaderDidInvalidateCache:(FYRandomAccessContentLoader*)loader withError:(NSError*)error;
+- (BOOL)hasETagForRandomAccessContentLoader:(FYRandomAccessContentLoader*)loader;
+- (NSString*)eTagForRandomAccessContentLoader:(FYRandomAccessContentLoader*)loader;
 
 @end
 

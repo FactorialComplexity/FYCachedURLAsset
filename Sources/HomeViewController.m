@@ -181,18 +181,29 @@ UITableViewDataSource
 	return cell;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	NSDictionary *meta = _testDatasource[indexPath.row];
-	
+- (void)onResourceForURLChanged:(NSNotification*)note
+{
+	if (note.object == _player.currentItem.asset)
+	{
+		// restart player
+		[self resetPlayerWithURL:((FYCachedURLAsset*)_player.currentItem.asset).originalURL];
+	}
+}
+
+- (void)resetPlayerWithURL:(NSURL*)URL
+{
 	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
 																   NSUserDomainMask,
 																   YES) firstObject];
 	
-	NSString *cacheFileName = [NSString stringWithFormat:@"test%d.%@", (int32_t)indexPath.row, [meta[@"url"] pathExtension]];
+	NSString *cacheFileName = [URL lastPathComponent];
 	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
 	
-	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:[NSURL URLWithString:meta[@"url"]] cacheFilePath:cacheFilePath];
+	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
 	AVPlayerItem *newItem = [[AVPlayerItem alloc] initWithAsset:asset];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResourceForURLChanged:)
+		name:FYResourceForURLChangedNotification object:asset];
 	
 	if (_player.currentItem) {
 		[_player replaceCurrentItemWithPlayerItem:newItem];
@@ -225,6 +236,12 @@ UITableViewDataSource
 			}
 		}];
 	}
+
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+	NSDictionary *meta = _testDatasource[indexPath.row];
+	[self resetPlayerWithURL:[NSURL URLWithString:meta[@"url"]]];
 }
 
 @end

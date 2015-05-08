@@ -18,6 +18,7 @@
 		7D9E79A71AE9438D0026F570 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D9E79A61AE9438D0026F570 /* SystemConfiguration.framework */; };
 		7D9E79AC1AEA43810026F570 /* MediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D9E79AB1AEA43810026F570 /* MediaCell.m */; };
 		7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DFB05E41AEE824400AE6E9F /* ProgressView.m */; };
+		EF214F641AFCD52000E5A891 /* FYHEADRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = EF214F631AFCD52000E5A891 /* FYHEADRequest.m */; };
 		EF7579951AF25EF300D8FE90 /* FYCachedURLAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579941AF25EF300D8FE90 /* FYCachedURLAsset.m */; };
 		EF75799F1AF25F9A00D8FE90 /* FYContentProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = EF75799E1AF25F9A00D8FE90 /* FYContentProvider.m */; };
 		EF7579AA1AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m in Sources */ = {isa = PBXBuildFile; fileRef = EF7579A91AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m */; };
@@ -44,6 +45,8 @@
 		7D9E79AB1AEA43810026F570 /* MediaCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MediaCell.m; sourceTree = "<group>"; };
 		7DFB05E31AEE824400AE6E9F /* ProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProgressView.h; sourceTree = "<group>"; };
 		7DFB05E41AEE824400AE6E9F /* ProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProgressView.m; sourceTree = "<group>"; };
+		EF214F621AFCD52000E5A891 /* FYHEADRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYHEADRequest.h; sourceTree = "<group>"; };
+		EF214F631AFCD52000E5A891 /* FYHEADRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYHEADRequest.m; sourceTree = "<group>"; };
 		EF7579931AF25EF300D8FE90 /* FYCachedURLAsset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYCachedURLAsset.h; sourceTree = "<group>"; };
 		EF7579941AF25EF300D8FE90 /* FYCachedURLAsset.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYCachedURLAsset.m; sourceTree = "<group>"; };
 		EF75799D1AF25F9A00D8FE90 /* FYContentProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYContentProvider.h; sourceTree = "<group>"; };
@@ -169,6 +172,8 @@
 				EF7579A91AF2935300D8FE90 /* NSHTTPURLResponse+Headers.m */,
 				EF7579AE1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.h */,
 				EF7579AF1AF37EAE00D8FE90 /* AVAssetResourceLoadingDataRequest+Info.m */,
+				EF214F621AFCD52000E5A891 /* FYHEADRequest.h */,
+				EF214F631AFCD52000E5A891 /* FYHEADRequest.m */,
 				EF7579AB1AF3766C00D8FE90 /* FYSerialContentLoader.h */,
 				EF7579AC1AF3766C00D8FE90 /* FYSerialContentLoader.m */,
 				EF7579B41AF394E000D8FE90 /* FYRandomAccessContentLoader.h */,
@@ -251,6 +256,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF214F641AFCD52000E5A891 /* FYHEADRequest.m in Sources */,
 				EF7579B61AF394E000D8FE90 /* FYRandomAccessContentLoader.m in Sources */,
 				7DFB05E51AEE824400AE6E9F /* ProgressView.m in Sources */,
 				7D3E4F301AE9053600F8B91D /* HomeViewController.m in Sources */,
@@ -375,7 +381,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"CACHED_URL_ASSET_DEBUG_LOG=1",
-					"CACHED_URL_ASSET_VERBOSE_LOG=0",
+					"CACHED_URL_ASSET_VERBOSE_LOG=1",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/Resources/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;

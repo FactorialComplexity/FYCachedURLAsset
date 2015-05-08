@@ -7,6 +7,7 @@
 //
 
 #import "FYRandomAccessContentLoader.h"
+#import "FYContentProvider.h"
 #import "NSHTTPURLResponse+Headers.h"
 #import "AVAssetResourceLoadingDataRequest+Info.h"
 #import "FYCachedURLAssetLog.h"
@@ -71,8 +72,34 @@
 
 - (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSHTTPURLResponse*)response
 {
-	FYLogD(@"RANDOM ACCESS LOADER HTTP RESPONSE HEADER\n  URL: %@\n  statusCode: %d\n  Content-Length: %lld\n  Content-Type: %@",
-		_URL, (int)response.statusCode, response.expectedContentLength, [response headerValueForKey:@"Content-Type"]);
+	FYLogD(@"RANDOM ACCESS LOADER HTTP RESPONSE HEADER\n  URL: %@\n  statusCode: %d\n  Content-Length: %lld\n  Content-Type: %@\n  ETag: %@",
+		_URL, (int)response.statusCode, response.expectedContentLength,
+		[response headerValueForKey:@"Content-Type"], [response headerValueForKey:@"ETag"]);
+	
+	NSString* currentETag = [_delegate eTagForRandomAccessContentLoader:self];
+	NSString* newETag = [response headerValueForKey:@"ETag"];
+	
+	if ([_delegate hasETagForRandomAccessContentLoader:self] && ![currentETag isEqualToString:newETag])
+	{
+		// ETag changed and cached content should be invalidated
+		FYLogD(@"SERIAL LOADER CACHE INVALIDATED\n  URL: %@\n  ETag (old): %@\n  ETag (new): %@",
+			_URL, currentETag, newETag);
+		
+		NSError* cacheError = [[NSError alloc] initWithDomain:@"FYCachedURLAsset" code:kFYResourceForURLChangedErrorCode
+			userInfo:@{
+				NSLocalizedDescriptionKey: [NSString stringWithFormat:NSLocalizedString(@"Resource changed on server", @"")],
+				@"ETag_Old": currentETag ? currentETag : [NSNull null],
+				@"ETag_New": newETag ? newETag : [NSNull null],
+			}];
+		
+		[_connection cancel];
+		_connection = nil;
+		
+		[_delegate randomAccessContentLoaderDidInvalidateCache:self withError:cacheError];
+		
+		return;
+	}
+
 	
 	if (response.statusCode >= 200 && response.statusCode < 300)
 	{
