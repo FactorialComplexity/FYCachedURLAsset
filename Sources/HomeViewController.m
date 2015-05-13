@@ -192,6 +192,8 @@ UITableViewDataSource
 
 - (void)resetPlayerWithURL:(NSURL*)URL
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:FYResourceForURLChangedNotification object:nil];
+
 	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
 																   NSUserDomainMask,
 																   YES) firstObject];

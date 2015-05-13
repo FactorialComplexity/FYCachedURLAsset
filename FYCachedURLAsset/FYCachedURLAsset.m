@@ -61,6 +61,8 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 
 - (void)dealloc
 {
+	[_contentProvider removeAsset:self];
+
 	FYLogD(@"[FYCachedURLAsset dealloc]\n  URL: %@\n  cacheFilePath: %@", _originalURL, _cacheFilePath);
 }
 

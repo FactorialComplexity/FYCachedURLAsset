@@ -94,12 +94,12 @@ static NSMutableSet* g_FYContentProviders = nil;
 
 - (void)addAsset:(FYCachedURLAsset*)asset
 {
-	[_assets addObject:asset];
+	[_assets addObject:[NSValue valueWithPointer:(__bridge const void *)(asset)]];
 }
 
 - (void)removeAsset:(FYCachedURLAsset*)asset
 {
-	[_assets removeObject:asset];
+	[_assets removeObject:[NSValue valueWithPointer:(__bridge const void *)(asset)]];
 	
 	if ([_assets count] == 0)
 	{
@@ -171,8 +171,9 @@ static NSMutableSet* g_FYContentProviders = nil;
 	[g_FYContentProviders removeObject:self];
 	
 	_permanentError = permanentError;
-	for (FYCachedURLAsset* asset in _assets)
+	for (NSValue* pAsset in _assets)
 	{
+		FYCachedURLAsset* asset = (FYCachedURLAsset*)[pAsset pointerValue];
 		[asset failWithPermanentError:permanentError];
 	}
 	[_assets removeAllObjects];
