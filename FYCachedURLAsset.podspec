@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
 
 # This description is used to generate tags and improve search results.
   s.description      = <<-DESC
-Handles simultaneous streaming and caching of audio and video files in a way that each byte is downloaded only once.
+It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an audio/video file while streaming and simultaneuosly saving downloaded data to a local URL. FYCachedURLAsset was designed to prevent download the same bytes twice.
                        DESC
 
   s.homepage         = 'https://github.com/FactorialComplexity/FYCachedURLAsset'
