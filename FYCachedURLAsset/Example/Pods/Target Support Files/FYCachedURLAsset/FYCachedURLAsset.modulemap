@@ -1,0 +1,6 @@
+framework module FYCachedURLAsset {
+  umbrella header "FYCachedURLAsset-umbrella.h"
+
+  export *
+  module * { export * }
+}
