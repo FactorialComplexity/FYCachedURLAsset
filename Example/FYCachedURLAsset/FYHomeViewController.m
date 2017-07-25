@@ -172,8 +172,8 @@ UITableViewDataSource
 
 - (void)setupDatasource {
 	_testDatasource = @[
-						@{@"name" : @"Audio MP3", @"url" : @"https://github.com/fycachedurlasset/raw/master/Example/Data/audio.mp3"},
-						@{@"name" : @"Video", @"url" : @"https://gitlab.f17y.com/ios/fycachedurlasset/raw/master/Example/Data/video.mp4"}];
+						@{@"name" : @"Audio MP3", @"url" : @"http://www.sample-videos.com/audio/mp3/wave.mp3"},
+						@{@"name" : @"Video", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"}];
 }
 
 #pragma mark - UITableViewDelegate/Datasource
