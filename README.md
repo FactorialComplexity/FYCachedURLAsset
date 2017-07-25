@@ -1,7 +1,6 @@
 FYCachedURLAsset
 ============
 
-[![CI Status](http://img.shields.io/travis/FactorialComplexity/FYCachedURLAsset.svg?style=flat)](https://travis-ci.org/FactorialComplexity/FYCachedURLAsset)
 [![Version](https://img.shields.io/cocoapods/v/FYCachedURLAsset.svg?style=flat)](http://cocoapods.org/pods/FYCachedURLAsset)
 [![License](https://img.shields.io/cocoapods/l/FYCachedURLAsset.svg?style=flat)](http://cocoapods.org/pods/FYCachedURLAsset)
 [![Platform](https://img.shields.io/cocoapods/p/FYCachedURLAsset.svg?style=flat)](http://cocoapods.org/pods/FYCachedURLAsset)
@@ -14,27 +13,13 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 
 ## Installation
 
-<b>Manual:</b><br>
-Add to your project the next source files: <br>
-<pre>
-AVAssetResourceLoadingDataRequest+Info.h
-AVAssetResourceLoadingDataRequest+Info.m
-FYCachedURLAsset.h
-FYCachedURLAsset.m
-FYCachedURLAssetLog.h
-FYContentProvider.h
-FYContentProvider.m
-FYHEADRequest.h
-FYHEADRequest.m
-FYRandomAccessContentLoader.h
-FYRandomAccessContentLoader.m
-FYSerialContentLoader.h
-FYSerialContentLoader.m
-NSHTTPURLResponse+Headers.h
-NSHTTPURLResponse+Headers.m
-</pre>
+<b>Manual:</b>
 <br>
-<b>CocoaPods:</b><br>
+Add to your project source files from `FYCachedURLAsset/Classes` folder
+<br>
+<br>
+<b>CocoaPods:</b>
+<br>
 <i>FYCachedURLAsset</i> is available through [CocoaPods](http://cocoapods.org). To install
 it, add the following line to your Podfile:
 <pre>
@@ -46,8 +31,17 @@ pod 'FYCachedURLAsset'
 <i>FYCachedURLAsset</i> is a replacement for `[AVURLAsset URLAssetWithURL:URL options:nil]`, but with additional local file path argument
 <pre>
 NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:[URL lastPathComponent]];
+
 FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
 </pre>
+
+## Features
+
+* supports streaming of media file, so it can be playbacked as soon as first data is available
+* simultaneously saves all downloaded data to a file during streaming
+* gracefully handles interruptions and resumes download only from place where was stopped
+* supports ETag header attribute to skip file download if no changes were made on the remote file from the last time
+* allows to seek stream to any place and continue cache from it
 
 ## License
 
