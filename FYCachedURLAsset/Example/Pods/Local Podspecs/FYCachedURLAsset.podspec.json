@@ -4,6 +4,7 @@
   "summary": "Provides local cache layer for remote audio and video stream  files",
   "description": "Handles simultaneous streaming and caching of audio and video files in a way that each byte is downloaded only once.",
   "homepage": "https://github.com/FactorialComplexity/FYCachedURLAsset",
+  "screenshots": "https://github.com/FactorialComplexity/FYCachedURLAsset/raw/master/FYCachedUrlAsset.png",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -22,8 +23,8 @@
   "source_files": "FYCachedURLAsset/Classes/*",
   "public_header_files": "Pod/Classes/*.h",
   "frameworks": [
-    "UIKit",
     "Foundation",
+    "UIKit",
     "AVFoundation"
   ]
 }

@@ -19,6 +19,7 @@
 		6003F598195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F596195388D20070C39A /* InfoPlist.strings */; };
 		6003F59A195388D20070C39A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F599195388D20070C39A /* main.m */; };
 		6003F5A9195388D20070C39A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5A8195388D20070C39A /* Images.xcassets */; };
+		CB0F558305E329229AC9A0CA /* Pods_FYCachedURLAsset_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 832DF2E3DD6C36AA4C46AA00 /* Pods_FYCachedURLAsset_Example.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,7 @@
 		6003F599195388D20070C39A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		6003F59B195388D20070C39A /* FYCachedURLAsset-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FYCachedURLAsset-Prefix.pch"; sourceTree = "<group>"; };
 		6003F5A8195388D20070C39A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		832DF2E3DD6C36AA4C46AA00 /* Pods_FYCachedURLAsset_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FYCachedURLAsset_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8605CA702A006533A5EC7AA6 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		94422E214ADD458377C44D49 /* Pods-FYCachedURLAsset_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FYCachedURLAsset_Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-FYCachedURLAsset_Tests/Pods-FYCachedURLAsset_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		A24690CA0770EF45D0766EAD /* Pods-FYCachedURLAsset_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FYCachedURLAsset_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-FYCachedURLAsset_Tests/Pods-FYCachedURLAsset_Tests.release.xcconfig"; sourceTree = "<group>"; };
@@ -58,6 +60,7 @@
 				6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */,
 				6003F592195388D20070C39A /* UIKit.framework in Frameworks */,
 				6003F58E195388D20070C39A /* Foundation.framework in Frameworks */,
+				CB0F558305E329229AC9A0CA /* Pods_FYCachedURLAsset_Example.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,6 +151,7 @@
 				6003F58D195388D20070C39A /* Foundation.framework */,
 				6003F58F195388D20070C39A /* CoreGraphics.framework */,
 				6003F591195388D20070C39A /* UIKit.framework */,
+				832DF2E3DD6C36AA4C46AA00 /* Pods_FYCachedURLAsset_Example.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

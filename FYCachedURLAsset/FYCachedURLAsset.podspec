@@ -17,7 +17,7 @@ Handles simultaneous streaming and caching of audio and video files in a way tha
                        DESC
 
   s.homepage         = 'https://github.com/FactorialComplexity/FYCachedURLAsset'
-  s.screenshots     = 'https://github.com/FactorialComplexity/FYCachedURLAsset/blob/master/FYCachedUrlAsset.png'
+  s.screenshots     = 'https://github.com/FactorialComplexity/FYCachedURLAsset/raw/master/FYCachedUrlAsset.png'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Vitaliy Ivanov' => 'wicharek@gmail.com', 'Viktor Naryshkin' => 'viktor.naryshkin@factorialcomplexity.com' }
   s.source           = { :git => 'https://github.com/FactorialComplexity/FYCachedURLAsset.git', :tag => s.version.to_s }
