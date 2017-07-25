@@ -173,7 +173,8 @@ UITableViewDataSource
 - (void)setupDatasource {
 	_testDatasource = @[
 						@{@"name" : @"Audio MP3", @"url" : @"http://www.sample-videos.com/audio/mp3/wave.mp3"},
-						@{@"name" : @"Video", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"}];
+						@{@"name" : @"Video 10MB", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"},
+                        @{@"name" : @"Video 30MB", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4"}];
 }
 
 #pragma mark - UITableViewDelegate/Datasource

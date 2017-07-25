@@ -41,8 +41,7 @@ FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFileP
 * simultaneously saves all downloaded data to a file during streaming
 * gracefully handles interruptions and resumes download only from place where was stopped
 * supports ETag header attribute to skip file download if no changes were made on the remote file from the last time
-* allows to seek stream to any place and continue cache from it
-
+* allows to seek stream to any place, but with limited cache support
 ## License
 
 <i>FYCachedURLAsset</i> is available under the MIT license. See the LICENSE file for more info.

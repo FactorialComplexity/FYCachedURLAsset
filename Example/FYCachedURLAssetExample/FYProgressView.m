@@ -43,9 +43,6 @@
 	CGRect bounds = self.bounds;
 	CGContextRef ctx = UIGraphicsGetCurrentContext();
 	
-	[[UIColor grayColor] setFill];
-	CGContextFillRect(ctx, rect);
-	
 	CGRect availableDataRect = (CGRect) {
 		0,
 		0,
@@ -62,7 +59,7 @@
 	
 	[[UIColor blueColor] setFill];
 	CGContextFillRect(ctx, availableDataRect);
-	[[UIColor greenColor] setFill];
+	[[UIColor colorWithRed:0.4 green:1 blue:0.4 alpha:1] setFill];
 	CGContextFillRect(ctx, availableDataOnDiskRect);
 }
 
