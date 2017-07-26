@@ -24,7 +24,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="66" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="c6G-1w-hWV">
-                                <rect key="frame" x="0.0" y="20" width="320" height="257"/>
+                                <rect key="frame" x="0.0" y="20" width="320" height="282"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 <prototypes>
@@ -78,7 +78,7 @@
                                 </connections>
                             </tableView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zuW-u3-d1z">
-                                <rect key="frame" x="16" y="286.5" width="288" height="90"/>
+                                <rect key="frame" x="16" y="311.5" width="288" height="65"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Time" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GCs-Ce-4bG">
                                         <rect key="frame" x="0.0" y="0.0" width="38" height="21"/>
@@ -125,7 +125,7 @@
                                     <constraint firstItem="GCs-Ce-4bG" firstAttribute="top" secondItem="zuW-u3-d1z" secondAttribute="top" id="8hv-yt-9Ao"/>
                                     <constraint firstItem="H8f-id-BSu" firstAttribute="centerY" secondItem="AGp-zh-0cw" secondAttribute="centerY" constant="-1" id="D6S-8V-wqA"/>
                                     <constraint firstAttribute="trailing" secondItem="TA8-ur-fMP" secondAttribute="trailing" id="KL0-WR-wQX"/>
-                                    <constraint firstAttribute="height" constant="90" id="UN3-NV-GZY"/>
+                                    <constraint firstAttribute="height" constant="65" id="UN3-NV-GZY"/>
                                     <constraint firstItem="GCs-Ce-4bG" firstAttribute="leading" secondItem="zuW-u3-d1z" secondAttribute="leading" id="bk3-jF-wG0"/>
                                     <constraint firstItem="H8f-id-BSu" firstAttribute="leading" secondItem="zuW-u3-d1z" secondAttribute="leading" id="c2K-BY-iUN"/>
                                     <constraint firstItem="AGp-zh-0cw" firstAttribute="leading" secondItem="zuW-u3-d1z" secondAttribute="leading" id="jjj-dr-Tke"/>
