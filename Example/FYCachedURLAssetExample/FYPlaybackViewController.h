@@ -25,13 +25,6 @@
 
 @import UIKit;
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
-
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
-    
-@property (nonatomic) BOOL isCached;
+@interface FYPlaybackViewController : UIViewController
 
 @end

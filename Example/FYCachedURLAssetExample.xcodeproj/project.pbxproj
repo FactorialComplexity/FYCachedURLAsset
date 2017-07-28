@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E7939641F289E6300E12E56 /* FYHeaderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E7939631F289E6300E12E56 /* FYHeaderCell.m */; };
+		1E79396B1F28A1ED00E12E56 /* FYMediaItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E79396A1F28A1ED00E12E56 /* FYMediaItem.m */; };
+		1E79396E1F28A1FA00E12E56 /* FYHeaderItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E79396D1F28A1FA00E12E56 /* FYHeaderItem.m */; };
+		1E7939741F28B4E900E12E56 /* FYTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E7939731F28B4E900E12E56 /* FYTableViewCell.m */; };
+		1E7939771F28B8FF00E12E56 /* FYTextFieldCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E7939761F28B8FF00E12E56 /* FYTextFieldCell.m */; };
+		1E79397A1F28B95200E12E56 /* FYTextFieldItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E7939791F28B95200E12E56 /* FYTextFieldItem.m */; };
+		1E79397D1F28BBE300E12E56 /* FYPlaybackViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E79397C1F28BBE300E12E56 /* FYPlaybackViewController.m */; };
+		1E8DA3C21F2A01C70087384E /* FYSectionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E8DA3C11F2A01C70087384E /* FYSectionCell.m */; };
+		1E8DA3C51F2A01DE0087384E /* FYSectionItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E8DA3C41F2A01DE0087384E /* FYSectionItem.m */; };
+		1E8DA3C81F2A042D0087384E /* FYSeparatorCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E8DA3C71F2A042D0087384E /* FYSeparatorCell.m */; };
+		1E8DA3CB1F2A043A0087384E /* FYSeparatorItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1E8DA3CA1F2A043A0087384E /* FYSeparatorItem.m */; };
 		1EA4C9081F2725AD0022AD89 /* FYAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C8F91F2725AD0022AD89 /* FYAppDelegate.m */; };
 		1EA4C90D1F2725AD0022AD89 /* FYHomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9031F2725AD0022AD89 /* FYHomeViewController.m */; };
 		1EA4C90E1F2725AD0022AD89 /* FYMediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9051F2725AD0022AD89 /* FYMediaCell.m */; };
@@ -24,6 +35,29 @@
 
 /* Begin PBXFileReference section */
 		0CAFC87361792C32E3A80B9B /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
+		1E7939621F289E6300E12E56 /* FYHeaderCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYHeaderCell.h; sourceTree = "<group>"; };
+		1E7939631F289E6300E12E56 /* FYHeaderCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYHeaderCell.m; sourceTree = "<group>"; };
+		1E7939651F28A14400E12E56 /* FYTableCellItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYTableCellItem.h; sourceTree = "<group>"; };
+		1E7939691F28A1ED00E12E56 /* FYMediaItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYMediaItem.h; sourceTree = "<group>"; };
+		1E79396A1F28A1ED00E12E56 /* FYMediaItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYMediaItem.m; sourceTree = "<group>"; };
+		1E79396C1F28A1FA00E12E56 /* FYHeaderItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYHeaderItem.h; sourceTree = "<group>"; };
+		1E79396D1F28A1FA00E12E56 /* FYHeaderItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYHeaderItem.m; sourceTree = "<group>"; };
+		1E79396F1F28B44B00E12E56 /* FYTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYTableViewCell.h; sourceTree = "<group>"; };
+		1E7939731F28B4E900E12E56 /* FYTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYTableViewCell.m; sourceTree = "<group>"; };
+		1E7939751F28B8FF00E12E56 /* FYTextFieldCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYTextFieldCell.h; sourceTree = "<group>"; };
+		1E7939761F28B8FF00E12E56 /* FYTextFieldCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYTextFieldCell.m; sourceTree = "<group>"; };
+		1E7939781F28B95200E12E56 /* FYTextFieldItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYTextFieldItem.h; sourceTree = "<group>"; };
+		1E7939791F28B95200E12E56 /* FYTextFieldItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYTextFieldItem.m; sourceTree = "<group>"; };
+		1E79397B1F28BBE300E12E56 /* FYPlaybackViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYPlaybackViewController.h; sourceTree = "<group>"; };
+		1E79397C1F28BBE300E12E56 /* FYPlaybackViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYPlaybackViewController.m; sourceTree = "<group>"; };
+		1E8DA3C01F2A01C70087384E /* FYSectionCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYSectionCell.h; sourceTree = "<group>"; };
+		1E8DA3C11F2A01C70087384E /* FYSectionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYSectionCell.m; sourceTree = "<group>"; };
+		1E8DA3C31F2A01DE0087384E /* FYSectionItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYSectionItem.h; sourceTree = "<group>"; };
+		1E8DA3C41F2A01DE0087384E /* FYSectionItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYSectionItem.m; sourceTree = "<group>"; };
+		1E8DA3C61F2A042D0087384E /* FYSeparatorCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYSeparatorCell.h; sourceTree = "<group>"; };
+		1E8DA3C71F2A042D0087384E /* FYSeparatorCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYSeparatorCell.m; sourceTree = "<group>"; };
+		1E8DA3C91F2A043A0087384E /* FYSeparatorItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYSeparatorItem.h; sourceTree = "<group>"; };
+		1E8DA3CA1F2A043A0087384E /* FYSeparatorItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYSeparatorItem.m; sourceTree = "<group>"; };
 		1EA4C8F81F2725AD0022AD89 /* FYAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYAppDelegate.h; sourceTree = "<group>"; };
 		1EA4C8F91F2725AD0022AD89 /* FYAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYAppDelegate.m; sourceTree = "<group>"; };
 		1EA4C9021F2725AD0022AD89 /* FYHomeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYHomeViewController.h; sourceTree = "<group>"; };
@@ -65,6 +99,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1E7939681F28A1BD00E12E56 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1E7939651F28A14400E12E56 /* FYTableCellItem.h */,
+				1E7939691F28A1ED00E12E56 /* FYMediaItem.h */,
+				1E79396A1F28A1ED00E12E56 /* FYMediaItem.m */,
+				1E79396C1F28A1FA00E12E56 /* FYHeaderItem.h */,
+				1E79396D1F28A1FA00E12E56 /* FYHeaderItem.m */,
+				1E8DA3C31F2A01DE0087384E /* FYSectionItem.h */,
+				1E8DA3C41F2A01DE0087384E /* FYSectionItem.m */,
+				1E7939781F28B95200E12E56 /* FYTextFieldItem.h */,
+				1E7939791F28B95200E12E56 /* FYTextFieldItem.m */,
+				1E8DA3C91F2A043A0087384E /* FYSeparatorItem.h */,
+				1E8DA3CA1F2A043A0087384E /* FYSeparatorItem.m */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
 		1EA4C9111F272A0A0022AD89 /* UI */ = {
 			isa = PBXGroup;
 			children = (
@@ -72,6 +124,8 @@
 				1EA4C9131F272A170022AD89 /* Cells */,
 				1EA4C9021F2725AD0022AD89 /* FYHomeViewController.h */,
 				1EA4C9031F2725AD0022AD89 /* FYHomeViewController.m */,
+				1E79397B1F28BBE300E12E56 /* FYPlaybackViewController.h */,
+				1E79397C1F28BBE300E12E56 /* FYPlaybackViewController.m */,
 			);
 			name = UI;
 			sourceTree = "<group>";
@@ -88,8 +142,19 @@
 		1EA4C9131F272A170022AD89 /* Cells */ = {
 			isa = PBXGroup;
 			children = (
+				1E7939681F28A1BD00E12E56 /* Models */,
+				1E79396F1F28B44B00E12E56 /* FYTableViewCell.h */,
+				1E7939731F28B4E900E12E56 /* FYTableViewCell.m */,
+				1E7939621F289E6300E12E56 /* FYHeaderCell.h */,
+				1E7939631F289E6300E12E56 /* FYHeaderCell.m */,
+				1E8DA3C01F2A01C70087384E /* FYSectionCell.h */,
+				1E8DA3C11F2A01C70087384E /* FYSectionCell.m */,
 				1EA4C9041F2725AD0022AD89 /* FYMediaCell.h */,
 				1EA4C9051F2725AD0022AD89 /* FYMediaCell.m */,
+				1E7939751F28B8FF00E12E56 /* FYTextFieldCell.h */,
+				1E7939761F28B8FF00E12E56 /* FYTextFieldCell.m */,
+				1E8DA3C61F2A042D0087384E /* FYSeparatorCell.h */,
+				1E8DA3C71F2A042D0087384E /* FYSeparatorCell.m */,
 			);
 			name = Cells;
 			sourceTree = "<group>";
@@ -308,11 +373,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E8DA3C81F2A042D0087384E /* FYSeparatorCell.m in Sources */,
+				1E79396E1F28A1FA00E12E56 /* FYHeaderItem.m in Sources */,
+				1E79397A1F28B95200E12E56 /* FYTextFieldItem.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
+				1E8DA3C21F2A01C70087384E /* FYSectionCell.m in Sources */,
 				1EA4C90F1F2725AD0022AD89 /* FYProgressView.m in Sources */,
+				1E79396B1F28A1ED00E12E56 /* FYMediaItem.m in Sources */,
+				1E7939771F28B8FF00E12E56 /* FYTextFieldCell.m in Sources */,
+				1E8DA3C51F2A01DE0087384E /* FYSectionItem.m in Sources */,
+				1E79397D1F28BBE300E12E56 /* FYPlaybackViewController.m in Sources */,
 				1EA4C9081F2725AD0022AD89 /* FYAppDelegate.m in Sources */,
+				1E8DA3CB1F2A043A0087384E /* FYSeparatorItem.m in Sources */,
 				1EA4C90D1F2725AD0022AD89 /* FYHomeViewController.m in Sources */,
 				1EA4C90E1F2725AD0022AD89 /* FYMediaCell.m in Sources */,
+				1E7939641F289E6300E12E56 /* FYHeaderCell.m in Sources */,
+				1E7939741F28B4E900E12E56 /* FYTableViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

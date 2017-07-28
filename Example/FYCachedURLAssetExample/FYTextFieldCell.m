@@ -23,15 +23,39 @@
  
  */
 
-@import UIKit;
+#import "FYTextFieldCell.h"
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
+@implementation FYTextFieldCell {
+    __weak IBOutlet UITextField *_textField;
+	__weak IBOutlet UIButton *_addButton;
+}
 
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
+- (void)awakeFromNib {
+	[super awakeFromNib];
+	
+	_textField.layer.borderColor = [[UIColor colorWithRed:232.0 / 255 green:232.0 / 255 blue:232.0 / 255 alpha:1] CGColor];
+	_textField.layer.borderWidth = 1;
+	
+	_textField.leftView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 16, 0)];
+	_textField.leftViewMode = UITextFieldViewModeAlways;
+	
+	[_addButton setTitleColor:[UIColor colorWithRed:75.0 / 255 green:90.0 / 255 blue:191.0 / 255 alpha:0.5] forState:UIControlStateDisabled];
+	_addButton.enabled = NO;
+}
     
-@property (nonatomic) BOOL isCached;
+#pragma mark - Dynamic Properties
+    
+- (void)setItem:(FYTextFieldItem *)item {
+    _textField.text = item.text;
+    _textField.placeholder = item.placeholder;
+}
+
+- (IBAction)textChanged:(id)sender {
+	_addButton.enabled = _textField.text.length > 0;
+}
+
+- (IBAction)addClicked:(id)sender {
+	!_textAddedCallback ?: _textAddedCallback(_textField.text);
+}
 
 @end

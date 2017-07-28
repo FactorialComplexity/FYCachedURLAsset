@@ -25,13 +25,13 @@
 
 @import UIKit;
 
-#import "FYMediaItem.h"
+#import "FYTextFieldItem.h"
 #import "FYTableViewCell.h"
 
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
+@interface FYTextFieldCell : FYTableViewCell
     
-@property (nonatomic) BOOL isCached;
+@property (nonatomic) FYTextFieldItem *textView;
+
+@property (nonatomic) void (^textAddedCallback)(NSString* text);
 
 @end

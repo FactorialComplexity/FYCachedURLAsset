@@ -23,15 +23,15 @@
  
  */
 
-@import UIKit;
+#import <Foundation/Foundation.h>
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
+typedef enum {
+    kHeaderItemType,
+    kMediaItemType
+} ItemType;
 
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
+@protocol FYTableCellItem <NSObject>
     
-@property (nonatomic) BOOL isCached;
-
+@property (nonatomic) ItemType itemType;
+    
 @end

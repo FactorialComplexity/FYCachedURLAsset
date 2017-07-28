@@ -23,44 +23,23 @@
  
  */
 
-#import "FYMediaCell.h"
+#import "FYHeaderCell.h"
 
-@implementation FYMediaCell {
-	__weak IBOutlet UILabel *_mediaNameLabel;
-	__weak IBOutlet UILabel *_mediaSizeLabel;
-	__weak IBOutlet UILabel *_mediaLengthLabel;
-	__weak IBOutlet UIImageView *_mediaCachedImage;
+@implementation FYHeaderCell {
+    __weak IBOutlet UILabel *_headerLabel;
 }
-
+    
 #pragma mark - Dynamic Properties
-
-- (void)setItem:(FYMediaItem *)item {
-	_media = item;
+    
+- (void)setItem:(FYHeaderItem *)item {
+	_header = item;
 	
-	[self setMediaName:item.mediaName];
-	_mediaSizeLabel.text = item.mediaSizeReadable;
-	_mediaLengthLabel.text = item.mediaLengthReadable;
-     
-     NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-     NSString *cacheFileName = [[NSURL URLWithString:item.mediaURL] lastPathComponent];
-     NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
-     
-     self.isCached = [[NSFileManager defaultManager] fileExistsAtPath:cacheFilePath];
-}
-
-- (void)setMediaName:(NSString*)name {
-	NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:name];
+	NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:item.text];
 	[attributedString addAttribute:NSKernAttributeName
-							 value:@(0.5)
+							 value:@(0.6)
 							 range:NSMakeRange(0, attributedString.length)];
 	
-	_mediaNameLabel.attributedText = attributedString;
-}
-
-- (void)setIsCached:(BOOL)isCached {
-	_isCached = isCached;
-	
-	_mediaCachedImage.hidden = !isCached;
+	_headerLabel.attributedText = attributedString;
 }
 
 @end

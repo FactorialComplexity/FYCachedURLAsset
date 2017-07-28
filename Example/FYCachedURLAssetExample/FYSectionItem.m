@@ -23,15 +23,18 @@
  
  */
 
-@import UIKit;
+#import "FYSectionItem.h"
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
+@implementation FYSectionItem
 
-@interface FYMediaCell : FYTableViewCell
+@synthesize itemType;
 
-@property (nonatomic) FYMediaItem *media;
-    
-@property (nonatomic) BOOL isCached;
+- (instancetype)initWithText:(NSString*)text {
+	if (self = [super init]) {
+		_text = text;
+	}
+	
+	return self;
+}
 
 @end

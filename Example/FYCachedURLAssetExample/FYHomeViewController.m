@@ -23,18 +23,26 @@
  
  */
 
-// Controllers
 #import "FYHomeViewController.h"
+#import "FYPlaybackViewController.h"
 
-// Model
+// Models
 #import "FYCachedURLAsset.h"
 #import "FYContentProvider.h"
-
-// Views
-#import "FYProgressView.h"
+#import "FYTableCellItem.h"
+#import "FYHeaderItem.h"
+#import "FYSectionItem.h"
+#import "FYMediaItem.h"
+#import "FYTextFieldItem.h"
+#import "FYSeparatorItem.h"
 
 // Cells
+#import "FYTableViewCell.h"
+#import "FYHeaderCell.h"
+#import "FYSectionItem.h"
 #import "FYMediaCell.h"
+#import "FYTextFieldCell.h"
+#import "FYSeparatorCell.h"
 
 @interface FYHomeViewController ()
 <
@@ -44,201 +52,164 @@ UITableViewDataSource
 @end
 
 @implementation FYHomeViewController {
-	NSArray *_testDatasource;
+	NSArray<id<FYTableCellItem>> *_rowsDatasource;
 	
-	__weak IBOutlet UILabel *_timeLabel;
-	__weak IBOutlet UISlider *_timeSlider;
-	__weak IBOutlet UIView *_videoPlayerLayerView;
-	__weak IBOutlet FYProgressView *_progressView;
+	NSMutableArray<FYMediaItem*>* _userMediaFiles;
+	
     __weak IBOutlet UITableView *_tableView;
-	
-	AVPlayer *_player;
-	NSTimer* _timer;
 }
 
 #pragma mark - Lifecycle
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
+	
+	[self loadMediaFiles];
 
-	[self setupDatasource];
+	[self updateDatasource];
     
     _tableView.rowHeight = UITableViewAutomaticDimension;
     _tableView.estimatedRowHeight = 40;
 	
-	_timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
+	UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
+	[self.view addGestureRecognizer:tap];
 }
 
 #pragma mark - Callbacks
 
-- (void)updateProgress {
-	FYCachedURLAsset* asset = (FYCachedURLAsset*)_player.currentItem.asset;
-	[_progressView updateWithCacheInfo:asset.cacheInfo];
-}
-
-- (IBAction)timeSliderValueChanged:(UISlider *)sender {
-	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
-	
-	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
-		CMTime time = CMTimeMake(sender.value * (float)asset.duration.value / asset.duration.timescale, 1);
-		
-		[self seekToTime:time];
-	}
-}
-
-- (IBAction)backwardClicked:(id)sender {
-	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
-	
-	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
-		CMTime time = CMTimeMake(_timeSlider.value * (float)asset.duration.value / asset.duration.timescale - 10, 1);
-		
-		[self seekToTime:time];
-	}
-}
-
-- (IBAction)forwardClicked:(id)sender {
-	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
-	
-	if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
-		CMTime time = CMTimeMake(_timeSlider.value * (float)asset.duration.value / asset.duration.timescale + 10, 1);
-		
-        [self seekToTime:time];
-	}
-}
-    
-- (void)seekToTime:(CMTime)time {
-    [_player pause];
-    [_player seekToTime:time completionHandler:^(BOOL finished) {
-        if (finished) {
-            int32_t seconds = time.value % 60;
-            int32_t minutes = (int32_t)time.value / 60;
-            
-            _timeLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
-            
-            [_player play];
-        }
-    }];
-}
-
-#pragma mark - KVO
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if ([keyPath isEqualToString:@"rate"]) {
-		NSLog(@"Rate changed to : %@", change);
-	} else if ([keyPath isEqualToString:@"status"]) {
-		NSInteger newStatus = [change[NSKeyValueChangeNewKey] integerValue];
-		
-		NSLog(@"Player state is: %@", @[@"Unknown", @"Ready to Play", @"Failed"][newStatus]);
-	} else if ([keyPath isEqualToString:@"loadedTimeRanges"]){
-		
-	} else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
-		if (_player.currentItem.playbackLikelyToKeepUp) {
-			[_player play];
-		}
-	} else if ([keyPath isEqualToString:@"currentItem"]) {
-		AVPlayerItem *item = change[NSKeyValueChangeOldKey];
-		
-		[item removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
-		
-		AVPlayerItem *newItem = change[NSKeyValueChangeNewKey];
-		
-		[newItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
-	}
+- (void)dismissKeyboard {
+	[self.view endEditing:YES];
 }
 
 #pragma mark - Private
 
-- (void)setupDatasource {
-	_testDatasource = @[
-						@{@"name" : @"Audio MP3", @"url" : @"http://www.sample-videos.com/audio/mp3/wave.mp3"},
-						@{@"name" : @"Video 10MB", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"},
-                        @{@"name" : @"Video 30MB", @"url" : @"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4"}];
+- (NSString*)documentDirectory {
+	return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+}
+
+- (void)loadMediaFiles {
+	NSData* mediaFilesData = [NSData dataWithContentsOfFile:[[self documentDirectory] stringByAppendingPathComponent:@"media.plist"]];
+	
+	_userMediaFiles = [NSKeyedUnarchiver unarchiveObjectWithData:mediaFilesData];
+
+	if (!_userMediaFiles) {
+		_userMediaFiles = [NSMutableArray new];
+	}
+}
+
+- (void)saveMediaFiles {
+	NSData* mediaFilesData = [NSKeyedArchiver archivedDataWithRootObject:_userMediaFiles];
+	
+	[mediaFilesData writeToFile:[[self documentDirectory] stringByAppendingPathComponent:@"media.plist"] atomically:YES];
+}
+
+- (void)updateDatasource {
+    NSMutableArray<id<FYTableCellItem>>* rowsDatasource = [NSMutableArray new];
+	
+	[rowsDatasource addObject:[[FYHeaderItem alloc] initWithText:@"FY Cached URL Asset"]];
+    
+    [rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"MEDIA FILES EXAMPLES"]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
+    
+    [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Wave.mp3" mediaUrl:@"http://www.sample-videos.com/audio/mp3/wave.mp3" mediaSize:725240 mediaLength:45]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
+	
+    [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Big Buck Bunny.mp4" mediaUrl:@"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4" mediaSize:10498677 mediaLength:62]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
+	
+    [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Big Buck Bunny.mp4" mediaUrl:@"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4" mediaSize:31491130 mediaLength:171]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
+    
+    [rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"YOUR MEDIA FILES"]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
+	
+	for (FYMediaItem* mediaFile in _userMediaFiles) {
+		[rowsDatasource addObject:mediaFile];
+		
+		[rowsDatasource addObject:[FYSeparatorItem new]];
+	}
+    
+    [rowsDatasource addObject:[[FYTextFieldItem alloc] initWithText:nil placeholder:@"Past URL to add Media File"]];
+    
+    _rowsDatasource = [rowsDatasource copy];
+	
+	[_tableView reloadData];
+}
+
+- (void)addMediaFileWithUrl:(NSURL*)url {
+	if (url && [url scheme] && [url host]) {
+		NSString* mediaName = ([url lastPathComponent].length > 0) ? [url lastPathComponent] : [url absoluteString];
+		
+		FYMediaItem* mediaItem = [[FYMediaItem alloc] initWithMediaName:mediaName mediaUrl:[url absoluteString] mediaSize:0 mediaLength:0];
+		
+		[_userMediaFiles addObject:mediaItem];
+		
+		[self saveMediaFiles];
+		
+		[self updateDatasource];
+	} else {
+		UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"Invalid Media File URL"
+																		message:nil
+																 preferredStyle:UIAlertControllerStyleAlert];
+		
+		UIAlertAction* okButton = [UIAlertAction actionWithTitle:@"OK"
+														   style:UIAlertActionStyleDefault
+														 handler:nil];
+		
+		[alert addAction:okButton];
+		
+		[self presentViewController:alert animated:YES completion:nil];
+	}
 }
 
 #pragma mark - UITableViewDelegate/Datasource
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-	return _testDatasource.count;
+	return _rowsDatasource.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	FYMediaCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FYMediaCell"];
-	NSDictionary *meta = _testDatasource[indexPath.row];
+	__typeof(self) __weak weakSelf = self;
 	
-	cell.mediaName = meta[@"name"];
-	cell.mediaURL = meta[@"url"];
+    id<FYTableCellItem> item = _rowsDatasource[indexPath.row];
+    
+    FYTableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass([item class])];
+    
+    cell.item = item;
 	
-	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-																   NSUserDomainMask,
-																   YES) firstObject];
-	NSString *cacheFileName = [NSString stringWithFormat:@"test%d.%@", (int32_t)indexPath.row, [meta[@"url"] pathExtension]];
-	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
-
-	cell.isCached = [[NSFileManager defaultManager] fileExistsAtPath:cacheFilePath];
+	if ([cell isKindOfClass:[FYTextFieldCell class]]) {
+		FYTextFieldCell* textFieldCell = (FYTextFieldCell*)cell;
+		
+		textFieldCell.textAddedCallback = ^(NSString* text) {
+			__typeof(weakSelf) __strong strongSelf = weakSelf;
+			
+			if (strongSelf) {
+				[strongSelf addMediaFileWithUrl:[NSURL URLWithString:text]];
+			}
+		};
+	}
 	
 	return cell;
 }
 
-- (void)onResourceForURLChanged:(NSNotification*)note {
-	if (note.object == _player.currentItem.asset) {
-		// restart player
-		[self resetPlayerWithURL:((FYCachedURLAsset*)_player.currentItem.asset).originalURL];
-	}
-}
-
-- (void)resetPlayerWithURL:(NSURL*)URL {
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:FYResourceForURLChangedNotification object:nil];
-
-	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-																   NSUserDomainMask,
-																   YES) firstObject];
-	
-	NSString *cacheFileName = [URL lastPathComponent];
-	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
-	
-	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
-	AVPlayerItem *newItem = [[AVPlayerItem alloc] initWithAsset:asset];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResourceForURLChanged:)
-		name:FYResourceForURLChangedNotification object:asset];
-	
-	if (_player.currentItem) {
-		[_player replaceCurrentItemWithPlayerItem:newItem];
-		[_player play];
-	} else {
-		_player = [AVPlayer playerWithPlayerItem:newItem];
-		[newItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
-		[_player addObserver:self forKeyPath:@"currentItem" options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew context:NULL];
-		[_player play];
-		
-		AVPlayerLayer *layer = [AVPlayerLayer playerLayerWithPlayer:_player];
-		layer.anchorPoint = CGPointZero;
-		[_videoPlayerLayerView.layer addSublayer:layer];
-		layer.bounds = _videoPlayerLayerView.layer.bounds;
-		
-		__typeof(AVPlayer *) __weak weakPlayer = _player;
-		__typeof(UISlider *) __weak weakSlider = _timeSlider;
-		__typeof(UILabel *) __weak weakLabel = _timeLabel;
-		
-		[_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
-			FYCachedURLAsset *asset = (FYCachedURLAsset *)weakPlayer.currentItem.asset;
-
-			if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
-				weakSlider.value = (float)CMTimeGetSeconds(time) / CMTimeGetSeconds(asset.duration);
-				
-				int32_t seconds = (int32_t)CMTimeGetSeconds(time) % 60;
-				int32_t minutes = CMTimeGetSeconds(time) / 60;
-				
-				weakLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
-			}
-		}];
-	}
-
-}
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	NSDictionary *meta = _testDatasource[indexPath.row];
-	[self resetPlayerWithURL:[NSURL URLWithString:meta[@"url"]]];
+    id<FYTableCellItem> item = _rowsDatasource[indexPath.row];
+	
+    if ([item isKindOfClass:[FYMediaItem class]]) {
+        FYMediaItem* mediaItem = (FYMediaItem*)item;
+        
+        //[self resetPlayerWithURL:[NSURL URLWithString:mediaItem.mediaURL]];
+        
+        FYPlaybackViewController* playbackViewController = [[FYPlaybackViewController alloc] initWithNibName:@"FYPlaybackViewController" bundle:nil];
+        
+        [self presentViewController:playbackViewController animated:YES completion:nil];
+    }    
+    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 

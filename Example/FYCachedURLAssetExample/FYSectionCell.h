@@ -25,13 +25,11 @@
 
 @import UIKit;
 
-#import "FYMediaItem.h"
+#import "FYSectionItem.h"
 #import "FYTableViewCell.h"
 
-@interface FYMediaCell : FYTableViewCell
+@interface FYSectionCell : FYTableViewCell
 
-@property (nonatomic) FYMediaItem *media;
-    
-@property (nonatomic) BOOL isCached;
+@property (nonatomic) FYSectionItem *section;
 
 @end

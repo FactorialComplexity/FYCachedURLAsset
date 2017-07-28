@@ -23,15 +23,8 @@
  
  */
 
-@import UIKit;
+#import "FYSeparatorCell.h"
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
-
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
-    
-@property (nonatomic) BOOL isCached;
+@implementation FYSeparatorCell
 
 @end

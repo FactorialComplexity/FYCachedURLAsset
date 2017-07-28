@@ -23,15 +23,19 @@
  
  */
 
-@import UIKit;
+#import "FYTextFieldItem.h"
 
-#import "FYMediaItem.h"
-#import "FYTableViewCell.h"
-
-@interface FYMediaCell : FYTableViewCell
-
-@property (nonatomic) FYMediaItem *media;
+@implementation FYTextFieldItem
     
-@property (nonatomic) BOOL isCached;
+@synthesize itemType;
+    
+- (instancetype)initWithText:(NSString*)text placeholder:(NSString*)placeholder {
+    if (self = [super init]) {
+        _text = text;
+        _placeholder = placeholder;
+    }
+    
+    return self;
+}
 
 @end
