@@ -24,6 +24,7 @@
 		1EA4C90F1F2725AD0022AD89 /* FYProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9071F2725AD0022AD89 /* FYProgressView.m */; };
 		1EA4C9221F272C4D0022AD89 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1EA4C91E1F272C4D0022AD89 /* LaunchScreen.xib */; };
 		1EA4C9231F272C4D0022AD89 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1EA4C9201F272C4D0022AD89 /* Main.storyboard */; };
+		1ED9D4D21F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9D4D11F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -68,6 +69,8 @@
 		1EA4C9071F2725AD0022AD89 /* FYProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYProgressView.m; sourceTree = "<group>"; };
 		1EA4C91F1F272C4D0022AD89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		1EA4C9211F272C4D0022AD89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		1ED9D4D01F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "FYPlaybackViewController+NavigationBar.h"; sourceTree = "<group>"; };
+		1ED9D4D11F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "FYPlaybackViewController+NavigationBar.m"; sourceTree = "<group>"; };
 		54AB1BC70583170D91F746DF /* Pods-FYCachedURLAsset_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FYCachedURLAsset_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-FYCachedURLAsset_Example/Pods-FYCachedURLAsset_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		584EFD1BC87D41E02FE45747 /* FYCachedURLAsset.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = FYCachedURLAsset.podspec; path = ../FYCachedURLAsset.podspec; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* FYCachedURLAssetExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FYCachedURLAssetExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,7 +145,6 @@
 		1EA4C9131F272A170022AD89 /* Cells */ = {
 			isa = PBXGroup;
 			children = (
-				1E7939681F28A1BD00E12E56 /* Models */,
 				1E79396F1F28B44B00E12E56 /* FYTableViewCell.h */,
 				1E7939731F28B4E900E12E56 /* FYTableViewCell.m */,
 				1E7939621F289E6300E12E56 /* FYHeaderCell.h */,
@@ -162,6 +164,8 @@
 		1EA4C9141F272AE00022AD89 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				1ED9D4CF1F2B436400A9C555 /* Categories */,
+				1E7939681F28A1BD00E12E56 /* Models */,
 				1EA4C9111F272A0A0022AD89 /* UI */,
 				1EA4C8F81F2725AD0022AD89 /* FYAppDelegate.h */,
 				1EA4C8F91F2725AD0022AD89 /* FYAppDelegate.m */,
@@ -176,6 +180,15 @@
 				1EA4C9201F272C4D0022AD89 /* Main.storyboard */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		1ED9D4CF1F2B436400A9C555 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				1ED9D4D01F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.h */,
+				1ED9D4D11F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m */,
+			);
+			name = Categories;
 			sourceTree = "<group>";
 		};
 		52315281C079194AC9CC78D7 /* Pods */ = {
@@ -379,6 +392,7 @@
 				6003F59A195388D20070C39A /* main.m in Sources */,
 				1E8DA3C21F2A01C70087384E /* FYSectionCell.m in Sources */,
 				1EA4C90F1F2725AD0022AD89 /* FYProgressView.m in Sources */,
+				1ED9D4D21F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m in Sources */,
 				1E79396B1F28A1ED00E12E56 /* FYMediaItem.m in Sources */,
 				1E7939771F28B8FF00E12E56 /* FYTextFieldCell.m in Sources */,
 				1E8DA3C51F2A01DE0087384E /* FYSectionItem.m in Sources */,

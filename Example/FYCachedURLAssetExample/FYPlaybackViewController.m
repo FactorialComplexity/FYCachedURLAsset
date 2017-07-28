@@ -28,29 +28,91 @@
 // Views
 #import "FYProgressView.h"
 
-@implementation FYPlaybackViewController {
-	__weak IBOutlet UILabel *_timeLabel;
-	__weak IBOutlet UISlider *_timeSlider;
+// Categories
+#import "FYPlaybackViewController+NavigationBar.h"
+
+@implementation FYPlaybackViewController {	
 	__weak IBOutlet UIView *_videoPlayerLayerView;
-	__weak IBOutlet FYProgressView *_progressView;
+	__weak IBOutlet UIButton *_skipBackwardButton;
+	__weak IBOutlet UISlider *_timeSlider;
+	__weak IBOutlet UIView *_timeSlidedTrackView;
+	__weak IBOutlet NSLayoutConstraint *_progressViewWidthConstraint;
+	__weak IBOutlet UIButton *_skipForwardButton;
+	__weak IBOutlet UILabel *_timeLabel;
+	__weak IBOutlet UIButton *_playPauseButton;
 	
 	AVPlayer *_player;
 	NSTimer* _timer;
+	
+	BOOL _isPlaying;
 }
 
 #pragma mark - Lifecycle
+
+- (void)loadView {
+	[super loadView];
+	
+	_isPlaying = YES;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	
+	_timeLabel.text = @"";
+	self.title = _mediaItem.mediaName;
+	
+	[self navigationBarStyleForPlayback];
+	
+	[_timeSlider setThumbImage:[UIImage imageNamed:@"slider_thumb_icon"] forState:UIControlStateNormal];
+	[_timeSlider setThumbImage:[UIImage imageNamed:@"slider_thumb_icon"] forState:UIControlStateHighlighted];
+	[_timeSlider setMinimumTrackImage:[UIImage alloc] forState:UIControlStateNormal];
+	[_timeSlider setMaximumTrackImage:[UIImage alloc] forState:UIControlStateNormal];
+	
+	[self.navigationController setNavigationBarHidden:NO animated:animated];
+	
+	if (_isPlaying) {
+		[_player play];
+	}
+}
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
 	
 	_timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
+	
+	[self resetPlayerWithURL:[NSURL URLWithString:_mediaItem.mediaURL]];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+	[super viewDidDisappear:animated];
+	
+	[_player pause];
 }
 
 #pragma mark - Callbacks
 
+- (IBAction)playPauseClicked:(id)sender {
+	_isPlaying = !_isPlaying;
+	
+	if (_isPlaying) {
+		[_playPauseButton setImage:[UIImage imageNamed:@"pause_icon"] forState:UIControlStateNormal];
+		
+		[_player play];
+	} else {
+		[_playPauseButton setImage:[UIImage imageNamed:@"play_icon"] forState:UIControlStateNormal];
+		
+		[_player pause];
+	}
+}
+
 - (void)updateProgress {
 	FYCachedURLAsset* asset = (FYCachedURLAsset*)_player.currentItem.asset;
-	[_progressView updateWithCacheInfo:asset.cacheInfo];
+	
+	if (asset.cacheInfo.availableData) {
+		_progressViewWidthConstraint.constant = 1.0 * asset.cacheInfo.availableDataOnDisk / asset.cacheInfo.contentLength * _timeSlidedTrackView.frame.size.width;
+	} else {
+		_progressViewWidthConstraint.constant = 0;
+	}
 }
 
 - (IBAction)timeSliderValueChanged:(UISlider *)sender {
@@ -83,18 +145,15 @@
 	}
 }
 
-- (void)seekToTime:(CMTime)time {
-	[_player pause];
-	[_player seekToTime:time completionHandler:^(BOOL finished) {
-		if (finished) {
-			int32_t seconds = time.value % 60;
-			int32_t minutes = (int32_t)time.value / 60;
-			
-			_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
-			
-			[_player play];
-		}
-	}];
+- (void)onResourceForURLChanged:(NSNotification*)note {
+	if (note.object == _player.currentItem.asset) {
+		// restart player
+		[self resetPlayerWithURL:((FYCachedURLAsset*)_player.currentItem.asset).originalURL];
+	}
+}
+
+-(void)itemDidFinishPlaying:(NSNotification *) notification {
+	[self.navigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - KVO
@@ -123,21 +182,27 @@
 	}
 }
 
-- (void)onResourceForURLChanged:(NSNotification*)note {
-	if (note.object == _player.currentItem.asset) {
-		// restart player
-		[self resetPlayerWithURL:((FYCachedURLAsset*)_player.currentItem.asset).originalURL];
-	}
+#pragma mark - Private
+
+- (void)seekToTime:(CMTime)time {
+	[_player pause];
+	[_player seekToTime:time completionHandler:^(BOOL finished) {
+		if (finished) {
+			[self updateTimeLabelWithTime:time duration:_player.currentItem.asset.duration];
+			
+			[_player play];
+		}
+	}];
 }
 
--(void)itemDidFinishPlaying:(NSNotification *) notification {
-	FYCachedURLAsset* asset = (FYCachedURLAsset*)_player.currentItem.asset;
+- (void)updateTimeLabelWithTime:(CMTime)time duration:(CMTime)duration {
+	int32_t seconds = (time.value / time.timescale) % 60;
+	int32_t minutes = (int32_t)(time.value / time.timescale) / 60;
 	
-	if (asset.cacheInfo.contentLength == asset.cacheInfo.availableDataOnDisk) {
-		//if (_selectedRow) {
-		//    [_tableView reloadRowsAtIndexPaths:@[_selectedRow] withRowAnimation:NO];
-		//}
-	}
+	int32_t totalSeconds = (duration.value / duration.timescale) % 60;
+	int32_t totalMinutes = (int32_t)(duration.value / duration.timescale) / 60;
+	
+	_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d / %02d:%02d", minutes, seconds, totalMinutes, totalSeconds];
 }
 
 - (void)resetPlayerWithURL:(NSURL*)URL {
@@ -168,24 +233,22 @@
 		[_player play];
 		
 		AVPlayerLayer *layer = [AVPlayerLayer playerLayerWithPlayer:_player];
-		layer.anchorPoint = CGPointZero;
+		//layer.anchorPoint = CGPointZero;
 		[_videoPlayerLayerView.layer addSublayer:layer];
-		layer.bounds = _videoPlayerLayerView.layer.bounds;
+		layer.frame = _videoPlayerLayerView.layer.bounds;
+		layer.videoGravity = AVLayerVideoGravityResize;
 		
-		__typeof(AVPlayer *) __weak weakPlayer = _player;
-		__typeof(UISlider *) __weak weakSlider = _timeSlider;
-		__typeof(UILabel *) __weak weakLabel = _timeLabel;
+		__typeof(self) __weak weakSelf = self;
 		
 		[_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
-			FYCachedURLAsset *asset = (FYCachedURLAsset *)weakPlayer.currentItem.asset;
-			
 			if ([asset statusOfValueForKey:@"duration" error:nil] == AVKeyValueStatusLoaded) {
-				weakSlider.value = (float)CMTimeGetSeconds(time) / CMTimeGetSeconds(asset.duration);
+				__typeof(weakSelf) __strong strongSelf = weakSelf;
 				
-				int32_t seconds = (int32_t)CMTimeGetSeconds(time) % 60;
-				int32_t minutes = CMTimeGetSeconds(time) / 60;
-				
-				weakLabel.text = [NSString stringWithFormat:@"%02d:%02d", minutes, seconds];
+				if (strongSelf) {
+					strongSelf->_timeSlider.value = (float)CMTimeGetSeconds(time) / CMTimeGetSeconds(strongSelf->_player.currentItem.asset.duration);
+					
+					[strongSelf updateTimeLabelWithTime:time duration:asset.duration];
+				}
 			}
 		}];
 	}

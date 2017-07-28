@@ -61,17 +61,24 @@ UITableViewDataSource
 
 #pragma mark - Lifecycle
 
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	
+	[self.navigationController setNavigationBarHidden:YES animated:animated];
+}
+
 - (void)viewDidLoad {
 	[super viewDidLoad];
 	
 	[self loadMediaFiles];
 
 	[self updateDatasource];
-    
-    _tableView.rowHeight = UITableViewAutomaticDimension;
+	
+	_tableView.rowHeight = UITableViewAutomaticDimension;
     _tableView.estimatedRowHeight = 40;
 	
 	UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
+	[tap setCancelsTouchesInView:NO];
 	[self.view addGestureRecognizer:tap];
 }
 
@@ -90,7 +97,9 @@ UITableViewDataSource
 - (void)loadMediaFiles {
 	NSData* mediaFilesData = [NSData dataWithContentsOfFile:[[self documentDirectory] stringByAppendingPathComponent:@"media.plist"]];
 	
-	_userMediaFiles = [NSKeyedUnarchiver unarchiveObjectWithData:mediaFilesData];
+	if (mediaFilesData) {
+		_userMediaFiles = [NSKeyedUnarchiver unarchiveObjectWithData:mediaFilesData];
+	}
 
 	if (!_userMediaFiles) {
 		_userMediaFiles = [NSMutableArray new];
@@ -201,13 +210,11 @@ UITableViewDataSource
     id<FYTableCellItem> item = _rowsDatasource[indexPath.row];
 	
     if ([item isKindOfClass:[FYMediaItem class]]) {
-        FYMediaItem* mediaItem = (FYMediaItem*)item;
-        
-        //[self resetPlayerWithURL:[NSURL URLWithString:mediaItem.mediaURL]];
-        
-        FYPlaybackViewController* playbackViewController = [[FYPlaybackViewController alloc] initWithNibName:@"FYPlaybackViewController" bundle:nil];
-        
-        [self presentViewController:playbackViewController animated:YES completion:nil];
+        FYPlaybackViewController* playbackViewController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"FYPlaybackViewController"];
+		
+		playbackViewController.mediaItem = (FYMediaItem*)item;
+		
+		[self.navigationController pushViewController:playbackViewController animated:YES];
     }    
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];

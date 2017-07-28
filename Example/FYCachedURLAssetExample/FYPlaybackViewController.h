@@ -25,6 +25,10 @@
 
 @import UIKit;
 
+#import "FYMediaItem.h"
+
 @interface FYPlaybackViewController : UIViewController
+
+@property (nonatomic) FYMediaItem* mediaItem;
 
 @end
