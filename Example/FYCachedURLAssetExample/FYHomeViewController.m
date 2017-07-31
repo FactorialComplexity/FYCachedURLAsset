@@ -129,7 +129,7 @@ UITableViewDataSource
 	
 	[rowsDatasource addObject:[FYSeparatorItem new]];
 	
-    [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Big Buck Bunny.mp4" mediaUrl:@"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4" mediaSize:31491130 mediaLength:171]];
+    [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Big Buck Bunny.mp4" mediaUrl:@"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4" mediaSize:31491130 mediaLength:170]];
 	
 	[rowsDatasource addObject:[FYSeparatorItem new]];
     

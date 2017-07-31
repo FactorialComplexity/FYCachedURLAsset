@@ -32,7 +32,8 @@
 #import "FYPlaybackViewController+NavigationBar.h"
 
 @implementation FYPlaybackViewController {	
-	__weak IBOutlet UIView *_videoPlayerLayerView;
+	__weak IBOutlet UIView *_playerView;
+	AVPlayerLayer *_playerLayer;
 	__weak IBOutlet UIButton *_skipBackwardButton;
 	__weak IBOutlet UISlider *_timeSlider;
 	__weak IBOutlet UIView *_timeSlidedTrackView;
@@ -87,6 +88,12 @@
 	[super viewDidDisappear:animated];
 	
 	[_player pause];
+}
+
+- (void)viewWillLayoutSubviews {
+	[super viewWillLayoutSubviews];
+	
+	_playerLayer.frame = _playerView.layer.bounds;
 }
 
 #pragma mark - Callbacks
@@ -232,11 +239,9 @@
 		[_player addObserver:self forKeyPath:@"currentItem" options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew context:NULL];
 		[_player play];
 		
-		AVPlayerLayer *layer = [AVPlayerLayer playerLayerWithPlayer:_player];
-		//layer.anchorPoint = CGPointZero;
-		[_videoPlayerLayerView.layer addSublayer:layer];
-		layer.frame = _videoPlayerLayerView.layer.bounds;
-		layer.videoGravity = AVLayerVideoGravityResize;
+		_playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
+		[_playerView.layer addSublayer:_playerLayer];
+		_playerLayer.frame = _playerView.layer.bounds;
 		
 		__typeof(self) __weak weakSelf = self;
 		

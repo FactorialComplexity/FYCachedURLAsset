@@ -286,7 +286,6 @@
                         <subviews>
                             <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="4Kk-DA-WuR">
                                 <rect key="frame" x="0.0" y="30" width="320" height="403"/>
-                                <color key="backgroundColor" red="0.29411764709999999" green="0.35294117650000001" blue="0.74901960779999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jDm-im-zi6">
                                 <rect key="frame" x="0.0" y="433" width="320" height="135"/>
@@ -387,13 +386,13 @@
                     </view>
                     <connections>
                         <outlet property="_playPauseButton" destination="7kX-vF-pt1" id="XQe-FS-BPC"/>
+                        <outlet property="_playerView" destination="4Kk-DA-WuR" id="g9T-9k-RGF"/>
                         <outlet property="_progressViewWidthConstraint" destination="Nae-7B-Wzv" id="qhS-hg-coc"/>
                         <outlet property="_skipBackwardButton" destination="LmA-zw-zE8" id="4ff-RD-Xwr"/>
                         <outlet property="_skipForwardButton" destination="c7o-37-BWI" id="P8j-lD-V89"/>
                         <outlet property="_timeLabel" destination="4WQ-Tq-sTk" id="oUd-aX-IV4"/>
                         <outlet property="_timeSlidedTrackView" destination="64C-Lo-wAu" id="lBi-aA-1U6"/>
                         <outlet property="_timeSlider" destination="AGp-zh-0cw" id="jgX-eY-BHi"/>
-                        <outlet property="_videoPlayerLayerView" destination="4Kk-DA-WuR" id="pIK-Ep-bEp"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="KRa-b0-6Be" userLabel="First Responder" sceneMemberID="firstResponder"/>
