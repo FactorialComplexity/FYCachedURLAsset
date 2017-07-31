@@ -23,36 +23,13 @@
  
  */
 
-@import AVFoundation;
+@import UIKit;
 
-#define kFYResourceForURLChangedErrorCode	(-1000)
+#import "FYSectionItem.h"
+#import "FYTableViewCell.h"
 
-@class FYCachedURLAsset;
-@class FYContentProvider;
-@protocol FYContentProviderDelegate <NSObject>
+@interface FYSectionCell : FYTableViewCell
 
-- (void)contentProvider:(FYContentProvider*)contentProvider didFailWithPermanentError:(NSError*)permanentError;
-
-@end
-
-
-@interface FYContentProvider : NSObject <AVAssetResourceLoaderDelegate>
-
-+ (FYContentProvider*)contentProviderWithURL:(NSURL*)URL cacheFilePath:(NSString*)cacheFilePath
-	asset:(FYCachedURLAsset*)asset;
-
-@property (nonatomic, readonly) NSURL* URL;
-@property (nonatomic, readonly) NSString* cacheFilePath;
-
-@property (nonatomic, readonly) long long contentLength;
-@property (nonatomic, readonly) long long availableDataOnDisk;
-@property (nonatomic, readonly) long long availableData;
-
-@property (nonatomic, readonly) NSError* permanentError;
-
-- (void)addAsset:(FYCachedURLAsset*)asset;
-- (void)removeAsset:(FYCachedURLAsset*)asset;
-
-- (void)cancel;
+@property (nonatomic) FYSectionItem *section;
 
 @end

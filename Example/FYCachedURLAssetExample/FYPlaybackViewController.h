@@ -23,36 +23,16 @@
  
  */
 
-@import AVFoundation;
+@import UIKit;
 
-#define kFYResourceForURLChangedErrorCode	(-1000)
+#import <FYCachedURLAsset/FYCachedURLAsset.h>
 
-@class FYCachedURLAsset;
-@class FYContentProvider;
-@protocol FYContentProviderDelegate <NSObject>
+#import "FYMediaItem.h"
 
-- (void)contentProvider:(FYContentProvider*)contentProvider didFailWithPermanentError:(NSError*)permanentError;
+@interface FYPlaybackViewController : UIViewController
 
-@end
+@property (nonatomic) FYMediaItem* mediaItem;
 
-
-@interface FYContentProvider : NSObject <AVAssetResourceLoaderDelegate>
-
-+ (FYContentProvider*)contentProviderWithURL:(NSURL*)URL cacheFilePath:(NSString*)cacheFilePath
-	asset:(FYCachedURLAsset*)asset;
-
-@property (nonatomic, readonly) NSURL* URL;
-@property (nonatomic, readonly) NSString* cacheFilePath;
-
-@property (nonatomic, readonly) long long contentLength;
-@property (nonatomic, readonly) long long availableDataOnDisk;
-@property (nonatomic, readonly) long long availableData;
-
-@property (nonatomic, readonly) NSError* permanentError;
-
-- (void)addAsset:(FYCachedURLAsset*)asset;
-- (void)removeAsset:(FYCachedURLAsset*)asset;
-
-- (void)cancel;
+@property (nonatomic) void (^mediaPropertiesCallback)(int64_t mediaSize, int32_t mediaLength);
 
 @end

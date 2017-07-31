@@ -76,6 +76,10 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 	return info;
 }
 
+- (void)cancel {
+	[_contentProvider cancel];
+}
+
 - (void)dealloc
 {
 	[_contentProvider removeAsset:self];

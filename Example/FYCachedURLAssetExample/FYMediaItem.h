@@ -23,36 +23,24 @@
  
  */
 
-@import AVFoundation;
+#import <Foundation/Foundation.h>
 
-#define kFYResourceForURLChangedErrorCode	(-1000)
+#import "FYTableCellItem.h"
 
-@class FYCachedURLAsset;
-@class FYContentProvider;
-@protocol FYContentProviderDelegate <NSObject>
+@interface FYMediaItem : NSObject <FYTableCellItem, NSCoding>
+    
+@property (nonatomic) NSString *mediaName;
+@property (nonatomic) NSString *mediaURL;
+@property (nonatomic) int64_t mediaSize;
+@property (nonatomic) int32_t mediaLength;
 
-- (void)contentProvider:(FYContentProvider*)contentProvider didFailWithPermanentError:(NSError*)permanentError;
+- (instancetype)initWithMediaName:(NSString*)mediaName mediaUrl:(NSString*)mediaUrl mediaSize:(int64_t)mediaSize mediaLength:(int32_t)mediaLength;
 
-@end
+- (NSString*)mediaSizeReadable;
+- (NSString*)mediaLengthReadable;
 
+- (BOOL)hasMediaLength;
 
-@interface FYContentProvider : NSObject <AVAssetResourceLoaderDelegate>
-
-+ (FYContentProvider*)contentProviderWithURL:(NSURL*)URL cacheFilePath:(NSString*)cacheFilePath
-	asset:(FYCachedURLAsset*)asset;
-
-@property (nonatomic, readonly) NSURL* URL;
-@property (nonatomic, readonly) NSString* cacheFilePath;
-
-@property (nonatomic, readonly) long long contentLength;
-@property (nonatomic, readonly) long long availableDataOnDisk;
-@property (nonatomic, readonly) long long availableData;
-
-@property (nonatomic, readonly) NSError* permanentError;
-
-- (void)addAsset:(FYCachedURLAsset*)asset;
-- (void)removeAsset:(FYCachedURLAsset*)asset;
-
-- (void)cancel;
+- (NSString*)cacheFilePath;
 
 @end

@@ -23,36 +23,23 @@
  
  */
 
-@import AVFoundation;
+#import "FYHeaderCell.h"
 
-#define kFYResourceForURLChangedErrorCode	(-1000)
-
-@class FYCachedURLAsset;
-@class FYContentProvider;
-@protocol FYContentProviderDelegate <NSObject>
-
-- (void)contentProvider:(FYContentProvider*)contentProvider didFailWithPermanentError:(NSError*)permanentError;
-
-@end
-
-
-@interface FYContentProvider : NSObject <AVAssetResourceLoaderDelegate>
-
-+ (FYContentProvider*)contentProviderWithURL:(NSURL*)URL cacheFilePath:(NSString*)cacheFilePath
-	asset:(FYCachedURLAsset*)asset;
-
-@property (nonatomic, readonly) NSURL* URL;
-@property (nonatomic, readonly) NSString* cacheFilePath;
-
-@property (nonatomic, readonly) long long contentLength;
-@property (nonatomic, readonly) long long availableDataOnDisk;
-@property (nonatomic, readonly) long long availableData;
-
-@property (nonatomic, readonly) NSError* permanentError;
-
-- (void)addAsset:(FYCachedURLAsset*)asset;
-- (void)removeAsset:(FYCachedURLAsset*)asset;
-
-- (void)cancel;
+@implementation FYHeaderCell {
+    __weak IBOutlet UILabel *_headerLabel;
+}
+    
+#pragma mark - Dynamic Properties
+    
+- (void)setItem:(FYHeaderItem *)item {
+	_header = item;
+	
+	NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:item.text];
+	[attributedString addAttribute:NSKernAttributeName
+							 value:@(0.6)
+							 range:NSMakeRange(0, attributedString.length)];
+	
+	_headerLabel.attributedText = attributedString;
+}
 
 @end
