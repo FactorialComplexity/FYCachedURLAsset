@@ -178,7 +178,9 @@
 		
 	} else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
 		if (_player.currentItem.playbackLikelyToKeepUp) {
-			[_player play];
+			if (_isPlaying) {
+				[_player play];
+			}
 		}
 	} else if ([keyPath isEqualToString:@"currentItem"]) {
 		AVPlayerItem *item = change[NSKeyValueChangeOldKey];
@@ -221,12 +223,7 @@
 	
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:FYResourceForURLChangedNotification object:nil];
 	
-	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-																   NSUserDomainMask,
-																   YES) firstObject];
-	
-	NSString *cacheFileName = [URL lastPathComponent];
-	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
+	NSString *cacheFilePath = _mediaItem.cacheFilePath;
 	
 	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
 	AVPlayerItem *newItem = [[AVPlayerItem alloc] initWithAsset:asset];

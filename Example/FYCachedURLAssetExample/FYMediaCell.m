@@ -46,12 +46,8 @@
 	_mediaLengthLabel.hidden = !item.hasMediaLength;
 	
 	_mediaDescriptionSeparatorLabel.hidden = _mediaSizeLabel.hidden && _mediaLengthLabel.hidden;
-     
-     NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-     NSString *cacheFileName = [[NSURL URLWithString:item.mediaURL] lastPathComponent];
-     NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
-     
-     self.isCached = [[NSFileManager defaultManager] fileExistsAtPath:cacheFilePath];
+
+	self.isCached = [[NSFileManager defaultManager] fileExistsAtPath:_media.cacheFilePath];
 }
 
 - (void)setMediaName:(NSString*)name {

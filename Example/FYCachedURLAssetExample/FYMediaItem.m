@@ -61,6 +61,14 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
 	return _mediaLength > 0;
 }
 
+- (NSString*)cacheFilePath {
+	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+	NSString *cacheFileName = [self sanitizeFileNameString:_mediaURL];
+	NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:cacheFileName];
+	
+	return cacheFilePath;
+}
+
 #pragma mark - Private
 
 - (NSString*)sizeToReadableString:(int64_t)bytes {
@@ -80,6 +88,11 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
 	} else {
 		return [NSString stringWithFormat:@"%ds", seconds];
 	}
+}
+
+- (NSString*)sanitizeFileNameString:(NSString *)fileName {
+	NSCharacterSet* illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString:@"/\\?%*|\"<>"];
+	return [[fileName componentsSeparatedByCharactersInSet:illegalFileNameCharacters] componentsJoinedByString:@""];
 }
 
 #pragma mark - <NSCoding>

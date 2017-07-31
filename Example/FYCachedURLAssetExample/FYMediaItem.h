@@ -42,4 +42,6 @@
 - (BOOL)hasMediaSize;
 - (BOOL)hasMediaLength;
 
+- (NSString*)cacheFilePath;
+
 @end
