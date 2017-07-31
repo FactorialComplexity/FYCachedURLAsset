@@ -82,6 +82,12 @@ UITableViewDataSource
 	[self.view addGestureRecognizer:tap];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+	[super viewDidAppear:animated];
+	
+	[self updateDatasource];
+}
+
 #pragma mark - Callbacks
 
 - (void)dismissKeyboard {
@@ -161,8 +167,10 @@ UITableViewDataSource
 		[self saveMediaFiles];
 		
 		[self updateDatasource];
+		
+		[self openMedia:mediaItem];
 	} else {
-		UIAlertController * alert = [UIAlertController alertControllerWithTitle:@"Invalid Media File URL"
+		UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Invalid Media File URL"
 																		message:nil
 																 preferredStyle:UIAlertControllerStyleAlert];
 		
@@ -174,6 +182,31 @@ UITableViewDataSource
 		
 		[self presentViewController:alert animated:YES completion:nil];
 	}
+}
+
+- (void)openMedia:(FYMediaItem*)mediaItem {
+	__typeof(self) __weak weakSelf = self;
+	
+	FYPlaybackViewController* playbackViewController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"FYPlaybackViewController"];
+	
+	playbackViewController.mediaItem = mediaItem;
+	if (!mediaItem.hasMediaSize || !mediaItem.hasMediaLength) {
+		// subscribe for media length/size callback
+		playbackViewController.mediaPropertiesCallback = ^(int64_t mediaSize, int32_t mediaLength) {
+			__typeof(weakSelf) __strong strongSelf = weakSelf;
+			
+			if (strongSelf) {
+				mediaItem.mediaSize = mediaSize;
+				mediaItem.mediaLength = mediaLength;
+				
+				[strongSelf saveMediaFiles];
+				
+				[strongSelf updateDatasource];
+			}
+		};
+	}
+	
+	[self.navigationController pushViewController:playbackViewController animated:YES];
 }
 
 #pragma mark - UITableViewDelegate/Datasource
@@ -210,11 +243,7 @@ UITableViewDataSource
     id<FYTableCellItem> item = _rowsDatasource[indexPath.row];
 	
     if ([item isKindOfClass:[FYMediaItem class]]) {
-        FYPlaybackViewController* playbackViewController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"FYPlaybackViewController"];
-		
-		playbackViewController.mediaItem = (FYMediaItem*)item;
-		
-		[self.navigationController pushViewController:playbackViewController animated:YES];
+		[self openMedia:(FYMediaItem*)item];
     }    
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];

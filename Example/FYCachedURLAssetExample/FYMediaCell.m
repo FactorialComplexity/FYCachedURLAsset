@@ -28,6 +28,7 @@
 @implementation FYMediaCell {
 	__weak IBOutlet UILabel *_mediaNameLabel;
 	__weak IBOutlet UILabel *_mediaSizeLabel;
+	__weak IBOutlet UILabel *_mediaDescriptionSeparatorLabel;
 	__weak IBOutlet UILabel *_mediaLengthLabel;
 	__weak IBOutlet UIImageView *_mediaCachedImage;
 }
@@ -40,6 +41,11 @@
 	[self setMediaName:item.mediaName];
 	_mediaSizeLabel.text = item.mediaSizeReadable;
 	_mediaLengthLabel.text = item.mediaLengthReadable;
+	
+	_mediaSizeLabel.hidden = !item.hasMediaSize;
+	_mediaLengthLabel.hidden = !item.hasMediaLength;
+	
+	_mediaDescriptionSeparatorLabel.hidden = _mediaSizeLabel.hidden && _mediaLengthLabel.hidden;
      
      NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
      NSString *cacheFileName = [[NSURL URLWithString:item.mediaURL] lastPathComponent];

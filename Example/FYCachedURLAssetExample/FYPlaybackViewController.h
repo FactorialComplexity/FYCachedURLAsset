@@ -25,10 +25,14 @@
 
 @import UIKit;
 
+#import <FYCachedURLAsset/FYCachedURLAsset.h>
+
 #import "FYMediaItem.h"
 
 @interface FYPlaybackViewController : UIViewController
 
 @property (nonatomic) FYMediaItem* mediaItem;
+
+@property (nonatomic) void (^mediaPropertiesCallback)(int64_t mediaSize, int32_t mediaLength);
 
 @end

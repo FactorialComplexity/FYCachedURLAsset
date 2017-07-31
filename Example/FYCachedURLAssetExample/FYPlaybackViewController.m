@@ -25,13 +25,11 @@
 
 #import "FYPlaybackViewController.h"
 
-// Views
-#import "FYProgressView.h"
-
 // Categories
 #import "FYPlaybackViewController+NavigationBar.h"
 
-@implementation FYPlaybackViewController {	
+@implementation FYPlaybackViewController {
+	__weak IBOutlet UIWebView *_audioAnimationWebView;
 	__weak IBOutlet UIView *_playerView;
 	AVPlayerLayer *_playerLayer;
 	__weak IBOutlet UIButton *_skipBackwardButton;
@@ -105,10 +103,18 @@
 		[_playPauseButton setImage:[UIImage imageNamed:@"pause_icon"] forState:UIControlStateNormal];
 		
 		[_player play];
+		
+		[UIView animateWithDuration:0.4 animations:^ {
+			_audioAnimationWebView.layer.opacity = 1;
+		}];
 	} else {
 		[_playPauseButton setImage:[UIImage imageNamed:@"play_icon"] forState:UIControlStateNormal];
 		
 		[_player pause];
+		
+		[UIView animateWithDuration:0.2 animations:^ {
+			_audioAnimationWebView.layer.opacity = 0;
+		}];
 	}
 }
 
@@ -213,6 +219,8 @@
 }
 
 - (void)resetPlayerWithURL:(NSURL*)URL {
+	__typeof(self) __weak weakSelf = self;
+	
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:FYResourceForURLChangedNotification object:nil];
 	
 	NSString *documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
@@ -224,6 +232,18 @@
 	
 	FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
 	AVPlayerItem *newItem = [[AVPlayerItem alloc] initWithAsset:asset];
+	
+	[asset loadValuesAsynchronouslyForKeys:@[@"playable"] completionHandler:^() {
+		__typeof(weakSelf) __strong strongSelf = weakSelf;
+		
+		if (strongSelf) {
+			if ([[asset.tracks firstObject].mediaType isEqualToString:@"soun"]) {
+				[strongSelf createAudioAnimation];
+			}
+			
+			!strongSelf->_mediaPropertiesCallback ?: strongSelf->_mediaPropertiesCallback(asset.cacheInfo.contentLength, (int32_t) (asset.duration.value / asset.duration.timescale));
+		}
+	}];
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResourceForURLChanged:)
 												 name:FYResourceForURLChangedNotification object:asset];
@@ -257,6 +277,12 @@
 			}
 		}];
 	}
+}
+
+- (void)createAudioAnimation {
+	NSString *filePath = [[NSBundle mainBundle] pathForResource:@"audio_animation" ofType:@"gif"];
+	NSURL *requestURL = [NSURL fileURLWithPath:filePath];
+	[_audioAnimationWebView loadRequest:[NSMutableURLRequest requestWithURL:requestURL]];
 }
 
 @end

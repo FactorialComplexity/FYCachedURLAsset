@@ -7,6 +7,7 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
         <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -108,7 +109,7 @@
                                             <outlet property="_sectionLabel" destination="CxC-1c-EUs" id="MiM-vP-nHh"/>
                                         </connections>
                                     </tableViewCell>
-                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="FYMediaItem" rowHeight="66" id="dbI-3H-Yco" customClass="FYMediaCell">
+                                    <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="FYMediaItem" rowHeight="66" id="dbI-3H-Yco" customClass="FYMediaCell">
                                         <rect key="frame" x="0.0" y="107" width="320" height="66"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="dbI-3H-Yco" id="Sam-hc-ITC">
@@ -165,6 +166,7 @@
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="_mediaCachedImage" destination="BbT-Na-Dbm" id="1MP-CU-edP"/>
+                                            <outlet property="_mediaDescriptionSeparatorLabel" destination="cKD-EE-65r" id="5Jr-jD-ELw"/>
                                             <outlet property="_mediaLengthLabel" destination="D7E-Ar-eTg" id="whz-5H-098"/>
                                             <outlet property="_mediaNameLabel" destination="8D1-hg-7jg" id="gvU-4W-G8l"/>
                                             <outlet property="_mediaSizeLabel" destination="vCb-yn-9a0" id="V6N-lr-jed"/>
@@ -284,6 +286,13 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <webView opaque="NO" contentMode="scaleToFill" scalesPageToFit="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wzr-gy-iR3">
+                                <rect key="frame" x="0.0" y="85" width="320" height="213"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="wzr-gy-iR3" secondAttribute="height" multiplier="600:400" id="xQX-zo-IK7"/>
+                                </constraints>
+                            </webView>
                             <view contentMode="scaleAspectFit" translatesAutoresizingMaskIntoConstraints="NO" id="4Kk-DA-WuR">
                                 <rect key="frame" x="0.0" y="30" width="320" height="403"/>
                             </view>
@@ -373,18 +382,22 @@
                                 </constraints>
                             </view>
                         </subviews>
-                        <color key="backgroundColor" red="0.078431372549019607" green="0.078431372549019607" blue="0.078431372549019607" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="backgroundColor" red="0.078431372549019607" green="0.078431372549019607" blue="0.078431372549019607" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="wzr-gy-iR3" firstAttribute="centerY" secondItem="4Kk-DA-WuR" secondAttribute="centerY" constant="-40" id="BRU-6R-NVU"/>
                             <constraint firstItem="jDm-im-zi6" firstAttribute="top" secondItem="4Kk-DA-WuR" secondAttribute="bottom" id="Bjc-8S-G8v"/>
                             <constraint firstItem="jDm-im-zi6" firstAttribute="leading" secondItem="fLV-ds-vbG" secondAttribute="leading" id="PDV-EY-sQC"/>
                             <constraint firstAttribute="bottom" secondItem="jDm-im-zi6" secondAttribute="bottom" id="PqJ-J5-nTi"/>
+                            <constraint firstItem="wzr-gy-iR3" firstAttribute="trailing" secondItem="4Kk-DA-WuR" secondAttribute="trailing" id="WHX-dl-qJn"/>
                             <constraint firstItem="4Kk-DA-WuR" firstAttribute="leading" secondItem="fLV-ds-vbG" secondAttribute="leading" id="Yx8-9s-IMP"/>
                             <constraint firstAttribute="trailing" secondItem="jDm-im-zi6" secondAttribute="trailing" id="cuE-F9-Gaz"/>
                             <constraint firstItem="4Kk-DA-WuR" firstAttribute="top" secondItem="Kj5-Lh-77B" secondAttribute="bottom" constant="10" id="e0q-W7-hYg"/>
                             <constraint firstAttribute="trailing" secondItem="4Kk-DA-WuR" secondAttribute="trailing" id="pnT-w6-3Mj"/>
+                            <constraint firstItem="wzr-gy-iR3" firstAttribute="leading" secondItem="4Kk-DA-WuR" secondAttribute="leading" id="qTm-P9-XcF"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="_audioAnimationWebView" destination="wzr-gy-iR3" id="6jt-Iu-E7l"/>
                         <outlet property="_playPauseButton" destination="7kX-vF-pt1" id="XQe-FS-BPC"/>
                         <outlet property="_playerView" destination="4Kk-DA-WuR" id="g9T-9k-RGF"/>
                         <outlet property="_progressViewWidthConstraint" destination="Nae-7B-Wzv" id="qhS-hg-coc"/>

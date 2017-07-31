@@ -21,10 +21,10 @@
 		1EA4C9081F2725AD0022AD89 /* FYAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C8F91F2725AD0022AD89 /* FYAppDelegate.m */; };
 		1EA4C90D1F2725AD0022AD89 /* FYHomeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9031F2725AD0022AD89 /* FYHomeViewController.m */; };
 		1EA4C90E1F2725AD0022AD89 /* FYMediaCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9051F2725AD0022AD89 /* FYMediaCell.m */; };
-		1EA4C90F1F2725AD0022AD89 /* FYProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EA4C9071F2725AD0022AD89 /* FYProgressView.m */; };
 		1EA4C9221F272C4D0022AD89 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1EA4C91E1F272C4D0022AD89 /* LaunchScreen.xib */; };
 		1EA4C9231F272C4D0022AD89 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1EA4C9201F272C4D0022AD89 /* Main.storyboard */; };
 		1ED9D4D21F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ED9D4D11F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m */; };
+		1EDB57B51F2F253F009D5A86 /* audio_animation.gif in Resources */ = {isa = PBXBuildFile; fileRef = 1EDB57B41F2F253F009D5A86 /* audio_animation.gif */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -65,12 +65,11 @@
 		1EA4C9031F2725AD0022AD89 /* FYHomeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYHomeViewController.m; sourceTree = "<group>"; };
 		1EA4C9041F2725AD0022AD89 /* FYMediaCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYMediaCell.h; sourceTree = "<group>"; };
 		1EA4C9051F2725AD0022AD89 /* FYMediaCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYMediaCell.m; sourceTree = "<group>"; };
-		1EA4C9061F2725AD0022AD89 /* FYProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FYProgressView.h; sourceTree = "<group>"; };
-		1EA4C9071F2725AD0022AD89 /* FYProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FYProgressView.m; sourceTree = "<group>"; };
 		1EA4C91F1F272C4D0022AD89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		1EA4C9211F272C4D0022AD89 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		1ED9D4D01F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "FYPlaybackViewController+NavigationBar.h"; sourceTree = "<group>"; };
 		1ED9D4D11F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "FYPlaybackViewController+NavigationBar.m"; sourceTree = "<group>"; };
+		1EDB57B41F2F253F009D5A86 /* audio_animation.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = audio_animation.gif; sourceTree = "<group>"; };
 		54AB1BC70583170D91F746DF /* Pods-FYCachedURLAsset_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FYCachedURLAsset_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-FYCachedURLAsset_Example/Pods-FYCachedURLAsset_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		584EFD1BC87D41E02FE45747 /* FYCachedURLAsset.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = FYCachedURLAsset.podspec; path = ../FYCachedURLAsset.podspec; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* FYCachedURLAssetExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FYCachedURLAssetExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -123,7 +122,6 @@
 		1EA4C9111F272A0A0022AD89 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				1EA4C9121F272A120022AD89 /* Views */,
 				1EA4C9131F272A170022AD89 /* Cells */,
 				1EA4C9021F2725AD0022AD89 /* FYHomeViewController.h */,
 				1EA4C9031F2725AD0022AD89 /* FYHomeViewController.m */,
@@ -131,15 +129,6 @@
 				1E79397C1F28BBE300E12E56 /* FYPlaybackViewController.m */,
 			);
 			name = UI;
-			sourceTree = "<group>";
-		};
-		1EA4C9121F272A120022AD89 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				1EA4C9061F2725AD0022AD89 /* FYProgressView.h */,
-				1EA4C9071F2725AD0022AD89 /* FYProgressView.m */,
-			);
-			name = Views;
 			sourceTree = "<group>";
 		};
 		1EA4C9131F272A170022AD89 /* Cells */ = {
@@ -176,6 +165,7 @@
 		1EA4C91D1F272C440022AD89 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				1EDB57B41F2F253F009D5A86 /* audio_animation.gif */,
 				1EA4C91E1F272C4D0022AD89 /* LaunchScreen.xib */,
 				1EA4C9201F272C4D0022AD89 /* Main.storyboard */,
 			);
@@ -325,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F5A9195388D20070C39A /* Images.xcassets in Resources */,
+				1EDB57B51F2F253F009D5A86 /* audio_animation.gif in Resources */,
 				1EA4C9221F272C4D0022AD89 /* LaunchScreen.xib in Resources */,
 				6003F598195388D20070C39A /* InfoPlist.strings in Resources */,
 				1EA4C9231F272C4D0022AD89 /* Main.storyboard in Resources */,
@@ -391,7 +382,6 @@
 				1E79397A1F28B95200E12E56 /* FYTextFieldItem.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
 				1E8DA3C21F2A01C70087384E /* FYSectionCell.m in Sources */,
-				1EA4C90F1F2725AD0022AD89 /* FYProgressView.m in Sources */,
 				1ED9D4D21F2B43A700A9C555 /* FYPlaybackViewController+NavigationBar.m in Sources */,
 				1E79396B1F28A1ED00E12E56 /* FYMediaItem.m in Sources */,
 				1E7939771F28B8FF00E12E56 /* FYTextFieldCell.m in Sources */,

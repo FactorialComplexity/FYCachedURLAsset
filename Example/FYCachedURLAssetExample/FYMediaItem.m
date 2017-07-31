@@ -34,22 +34,40 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
     
 @synthesize itemType;
     
-- (instancetype)initWithMediaName:(NSString*)mediaName mediaUrl:(NSString*)mediaUrl mediaSize:(long)mediaSize mediaLength:(int)mediaLength {
+- (instancetype)initWithMediaName:(NSString*)mediaName mediaUrl:(NSString*)mediaUrl mediaSize:(int64_t)mediaSize mediaLength:(int32_t)mediaLength {
     if (self = [super init]) {
         _mediaName = mediaName;
         _mediaURL = mediaUrl;
-		_mediaSizeReadable = [self sizeToReadableString:mediaSize];
-		_mediaLengthReadable = [self lengthToReadableString:mediaLength];
+		_mediaSize = mediaSize;
+		_mediaLength = mediaLength;
     }
     
     return self;
 }
 
-- (NSString*)sizeToReadableString:(long)bytes {
+- (NSString*)mediaSizeReadable {
+	return [self sizeToReadableString:_mediaSize];
+}
+
+- (NSString*)mediaLengthReadable {
+	return [self lengthToReadableString:_mediaLength];
+}
+
+- (BOOL)hasMediaSize {
+	return _mediaSize > 0;
+}
+
+- (BOOL)hasMediaLength {
+	return _mediaLength > 0;
+}
+
+#pragma mark - Private
+
+- (NSString*)sizeToReadableString:(int64_t)bytes {
 	return [NSString stringWithFormat:@"%.01f MB", bytes / 1024.0 / 1024.0];
 }
 
-- (NSString*)lengthToReadableString:(int)seconds {
+- (NSString*)lengthToReadableString:(int32_t)seconds {
 	int hours = seconds / 3600;
 	int remainder = seconds % 3600;
 	int minutes = remainder / 60;
@@ -71,8 +89,8 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
 	if (self != nil) {
 		_mediaName = [decoder decodeObjectForKey:MediaNameArchiveKey];
 		_mediaURL = [decoder decodeObjectForKey:MediaUrlArchiveKey];
-		_mediaSizeReadable = [decoder decodeObjectForKey:MediaSizeArchiveKey];
-		_mediaLengthReadable = [decoder decodeObjectForKey:MediaLengthArchiveKey];
+		_mediaSize = [decoder decodeInt64ForKey:MediaSizeArchiveKey];
+		_mediaLength = [decoder decodeInt32ForKey:MediaLengthArchiveKey];
 	}
 	return self;
 }
@@ -80,8 +98,8 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
 - (void)encodeWithCoder:(NSCoder *)encoder {
 	[encoder encodeObject:_mediaName forKey:MediaNameArchiveKey];
 	[encoder encodeObject:_mediaURL forKey:MediaUrlArchiveKey];
-	[encoder encodeObject:_mediaSizeReadable forKey:MediaSizeArchiveKey];
-	[encoder encodeObject:_mediaLengthReadable forKey:MediaLengthArchiveKey];
+	[encoder encodeInt64:_mediaSize forKey:MediaSizeArchiveKey];
+	[encoder encodeInt32:_mediaLength forKey:MediaLengthArchiveKey];
 }
 
 @end
