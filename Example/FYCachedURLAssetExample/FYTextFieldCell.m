@@ -58,6 +58,10 @@
 	_addButton.enabled = _textField.text.length > 0;
 }
 
+- (IBAction)textDidEndOnExit:(id)sender {
+	!_textAddedCallback ?: _textAddedCallback(_textField.text);
+}
+
 - (IBAction)addClicked:(id)sender {
 	!_textAddedCallback ?: _textAddedCallback(_textField.text);
 }

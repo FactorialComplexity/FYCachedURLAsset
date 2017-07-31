@@ -66,6 +66,7 @@
                                             <textInputTraits key="textInputTraits" autocorrectionType="no" keyboardType="URL" returnKeyType="go" enablesReturnKeyAutomatically="YES"/>
                                             <connections>
                                                 <action selector="textChanged:" destination="w5l-HL-6bi" eventType="editingChanged" id="8xP-i6-kFP"/>
+                                                <action selector="textDidEndOnExit:" destination="w5l-HL-6bi" eventType="editingDidEndOnExit" id="6WX-0h-ghX"/>
                                             </connections>
                                         </textField>
                                         <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="999" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1lj-Mq-WuY">
