@@ -46,11 +46,15 @@
 #pragma mark - Dynamic Properties
     
 - (void)setItem:(FYTextFieldItem *)item {
+	_textItem = item;
+	
     _textField.text = item.text;
     _textField.placeholder = item.placeholder;
 }
 
 - (IBAction)textChanged:(id)sender {
+	_textItem.text = _textField.text;
+	
 	_addButton.enabled = _textField.text.length > 0;
 }
 

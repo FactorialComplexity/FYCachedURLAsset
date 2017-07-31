@@ -30,7 +30,7 @@
 
 @interface FYTextFieldCell : FYTableViewCell
     
-@property (nonatomic) FYTextFieldItem *textView;
+@property (nonatomic, assign) FYTextFieldItem *textItem;
 
 @property (nonatomic) void (^textAddedCallback)(NSString* text);
 

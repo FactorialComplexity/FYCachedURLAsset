@@ -81,6 +81,7 @@
 	[asset cancel];
 	
 	[_player pause];
+	[_player replaceCurrentItemWithPlayerItem:nil];
 }
 
 - (void)viewWillLayoutSubviews {

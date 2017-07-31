@@ -44,19 +44,10 @@
 #import "FYTextFieldCell.h"
 #import "FYSeparatorCell.h"
 
-@interface FYHomeViewController ()
-<
-UITableViewDelegate,
-UITableViewDataSource
->
-@end
-
 @implementation FYHomeViewController {
 	NSArray<id<FYTableCellItem>> *_rowsDatasource;
 	
 	NSMutableArray<FYMediaItem*>* _userMediaFiles;
-	
-    __weak IBOutlet UITableView *_tableView;
 }
 
 #pragma mark - Lifecycle
@@ -74,8 +65,8 @@ UITableViewDataSource
 
 	[self updateDatasource];
 	
-	_tableView.rowHeight = UITableViewAutomaticDimension;
-    _tableView.estimatedRowHeight = 40;
+	self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 40;
 	
 	UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
 	[tap setCancelsTouchesInView:NO];
@@ -157,7 +148,7 @@ UITableViewDataSource
     
     _rowsDatasource = [rowsDatasource copy];
 	
-	[_tableView reloadData];
+	[self.tableView reloadData];
 }
 
 - (void)addMediaFileWithUrl:(NSURL*)url {
