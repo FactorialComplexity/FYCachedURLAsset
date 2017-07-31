@@ -168,16 +168,18 @@ UITableViewDataSource
 	
     [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Big Buck Bunny.mp4" mediaUrl:@"http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_30mb.mp4" mediaSize:31491130 mediaLength:170]];
 	
-	[rowsDatasource addObject:[FYSeparatorItem new]];
-    
-    [rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"YOUR MEDIA FILES"]];
-	
-	for (FYMediaItem* mediaFile in _userMediaFiles) {
+	if (_userMediaFiles.count > 0) {
 		[rowsDatasource addObject:[FYSeparatorItem new]];
 		
-		[rowsDatasource addObject:mediaFile];
+		[rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"YOUR MEDIA FILES"]];
+		
+		for (FYMediaItem* mediaFile in _userMediaFiles) {
+			[rowsDatasource addObject:[FYSeparatorItem new]];
+			
+			[rowsDatasource addObject:mediaFile];
+		}
 	}
-    
+	
     _rowsDatasource = [rowsDatasource copy];
 	
 	[_tableView reloadData];
@@ -305,6 +307,32 @@ UITableViewDataSource
     }    
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+	id<FYTableCellItem> item = _rowsDatasource[indexPath.row];
+	
+	if ([item isKindOfClass:[FYMediaItem class]]) {
+		FYMediaItem* mediaItem = (FYMediaItem*)item;
+		
+		return [_userMediaFiles containsObject:mediaItem];
+	}
+	
+	return NO;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+	if (editingStyle == UITableViewCellEditingStyleDelete) {
+		id<FYTableCellItem> item = [_rowsDatasource objectAtIndex:indexPath.row];
+		
+		FYMediaItem* mediaItem = (FYMediaItem*)item;
+		
+		[_userMediaFiles removeObject:mediaItem];
+		
+		[self saveMediaFiles];
+		
+		[self updateDatasource];
+	}
 }
 
 @end
