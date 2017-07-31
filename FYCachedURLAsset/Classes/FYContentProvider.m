@@ -100,11 +100,15 @@ static NSMutableSet* g_FYContentProviders = nil;
 	return self;
 }
 
-- (void)dealloc
-{
+- (void)cancel {
 	[_serialContentLoader stopDownloading];
 	for (FYRandomAccessContentLoader* loader in _randomAccessLoaders)
 		[loader cancel];
+}
+
+- (void)dealloc
+{
+	[self cancel];
 	
 	FYLogD(@"[FYContentProvider dealloc]\n   URL: %@\n  cacheFilePath: %@", _URL, _cacheFilePath);
 }

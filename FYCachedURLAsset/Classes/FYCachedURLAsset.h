@@ -55,4 +55,6 @@ FYCachedURLAssetCacheInfo;
  */
 + (instancetype)cachedURLAssetWithURL:(NSURL *)url cacheFilePath:(NSString *)path;
 
+- (void)cancel;
+
 @end

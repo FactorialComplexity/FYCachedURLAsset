@@ -48,12 +48,6 @@
 
 #pragma mark - Lifecycle
 
-- (void)loadView {
-	[super loadView];
-	
-	_isPlaying = YES;
-}
-
 - (void)viewWillAppear:(BOOL)animated {
 	[super viewWillAppear:animated];
 	
@@ -68,10 +62,6 @@
 	[_timeSlider setMaximumTrackImage:[UIImage alloc] forState:UIControlStateNormal];
 	
 	[self.navigationController setNavigationBarHidden:NO animated:animated];
-	
-	if (_isPlaying) {
-		[_player play];
-	}
 }
 
 - (void)viewDidLoad {
@@ -79,11 +69,16 @@
 	
 	_timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(updateProgress) userInfo:nil repeats:YES];
 	
+	_isPlaying = YES;
+	
 	[self resetPlayerWithURL:[NSURL URLWithString:_mediaItem.mediaURL]];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
 	[super viewDidDisappear:animated];
+	
+	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
+	[asset cancel];
 	
 	[_player pause];
 }
@@ -203,7 +198,9 @@
 		if (finished) {
 			[self updateTimeLabelWithTime:time duration:_player.currentItem.asset.duration];
 			
-			[_player play];
+			if (_isPlaying) {
+				[_player play];
+			}
 		}
 	}];
 }

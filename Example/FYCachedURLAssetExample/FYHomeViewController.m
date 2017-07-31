@@ -126,6 +126,10 @@ UITableViewDataSource
     [rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"MEDIA FILES EXAMPLES"]];
 	
 	[rowsDatasource addObject:[FYSeparatorItem new]];
+	
+	[rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Crowd Cheering.mp3" mediaUrl:@"http://www.sample-videos.com/audio/mp3/crowd-cheering.mp3" mediaSize:443926 mediaLength:27]];
+	
+	[rowsDatasource addObject:[FYSeparatorItem new]];
     
     [rowsDatasource addObject:[[FYMediaItem alloc] initWithMediaName:@"Wave.mp3" mediaUrl:@"http://www.sample-videos.com/audio/mp3/wave.mp3" mediaSize:725240 mediaLength:45]];
 	

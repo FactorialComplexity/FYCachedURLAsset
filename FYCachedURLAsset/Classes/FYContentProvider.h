@@ -53,4 +53,6 @@
 - (void)addAsset:(FYCachedURLAsset*)asset;
 - (void)removeAsset:(FYCachedURLAsset*)asset;
 
+- (void)cancel;
+
 @end
