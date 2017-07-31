@@ -39,7 +39,6 @@
 - (NSString*)mediaSizeReadable;
 - (NSString*)mediaLengthReadable;
 
-- (BOOL)hasMediaSize;
 - (BOOL)hasMediaLength;
 
 - (NSString*)cacheFilePath;

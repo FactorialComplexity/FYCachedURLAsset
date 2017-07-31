@@ -44,10 +44,26 @@
 #import "FYTextFieldCell.h"
 #import "FYSeparatorCell.h"
 
+@interface FYHomeViewController ()
+<
+UITableViewDelegate,
+UITableViewDataSource
+>
+@end
+
+
 @implementation FYHomeViewController {
 	NSArray<id<FYTableCellItem>> *_rowsDatasource;
 	
 	NSMutableArray<FYMediaItem*>* _userMediaFiles;
+	
+	__weak IBOutlet UITableView *_tableView;
+	
+	__weak IBOutlet UIView *_addMediaView;
+	__weak IBOutlet UITextField *_addMediaTextField;
+	__weak IBOutlet UIButton *_addMediaButton;
+	
+	__weak IBOutlet NSLayoutConstraint *_footerBottonConstraint;
 }
 
 #pragma mark - Lifecycle
@@ -62,19 +78,25 @@
 	[super viewDidLoad];
 	
 	[self loadMediaFiles];
-
-	[self updateDatasource];
 	
-	self.tableView.rowHeight = UITableViewAutomaticDimension;
-    self.tableView.estimatedRowHeight = 40;
+	_tableView.rowHeight = UITableViewAutomaticDimension;
+    _tableView.estimatedRowHeight = 40;
+	
+	_addMediaTextField.layer.borderColor = [[UIColor colorWithRed:232.0 / 255 green:232.0 / 255 blue:232.0 / 255 alpha:1] CGColor];
+	_addMediaTextField.layer.borderWidth = 1;
+	
+	_addMediaTextField.leftView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 16, 0)];
+	_addMediaTextField.leftViewMode = UITextFieldViewModeAlways;
+	
+	_addMediaButton.enabled = NO;
+	
+	[_addMediaButton setTitleColor:[UIColor colorWithRed:75.0 / 255 green:90.0 / 255 blue:191.0 / 255 alpha:0.5] forState:UIControlStateDisabled];
 	
 	UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
 	[tap setCancelsTouchesInView:NO];
-	[self.view addGestureRecognizer:tap];
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-	[super viewDidAppear:animated];
+	[_tableView addGestureRecognizer:tap];
+	
+	[self subscribeKeyboardNotifications];
 	
 	[self updateDatasource];
 }
@@ -83,6 +105,20 @@
 
 - (void)dismissKeyboard {
 	[self.view endEditing:YES];
+}
+
+- (IBAction)textChanged:(id)sender {
+	_addMediaButton.enabled = _addMediaTextField.text.length > 0;
+}
+
+- (IBAction)textDidEndOnExit:(id)sender {
+	[self addMediaFileWithUrl:[NSURL URLWithString:_addMediaTextField.text]];
+}
+
+- (IBAction)addClicked:(id)sender {
+	[self addMediaFileWithUrl:[NSURL URLWithString:_addMediaTextField.text]];
+	
+	[_addMediaTextField resignFirstResponder];
 }
 
 #pragma mark - Private
@@ -136,19 +172,15 @@
     
     [rowsDatasource addObject:[[FYSectionItem alloc] initWithText:@"YOUR MEDIA FILES"]];
 	
-	[rowsDatasource addObject:[FYSeparatorItem new]];
-	
 	for (FYMediaItem* mediaFile in _userMediaFiles) {
-		[rowsDatasource addObject:mediaFile];
-		
 		[rowsDatasource addObject:[FYSeparatorItem new]];
+		
+		[rowsDatasource addObject:mediaFile];
 	}
-    
-    [rowsDatasource addObject:[[FYTextFieldItem alloc] initWithText:nil placeholder:@"Past URL to add Media File"]];
     
     _rowsDatasource = [rowsDatasource copy];
 	
-	[self.tableView reloadData];
+	[_tableView reloadData];
 }
 
 - (void)addMediaFileWithUrl:(NSURL*)url {
@@ -158,6 +190,9 @@
 		FYMediaItem* mediaItem = [[FYMediaItem alloc] initWithMediaName:mediaName mediaUrl:[url absoluteString] mediaSize:0 mediaLength:0];
 		
 		[_userMediaFiles addObject:mediaItem];
+		
+		_addMediaTextField.text = @"";
+		_addMediaButton.enabled = NO;
 		
 		[self saveMediaFiles];
 		
@@ -185,7 +220,7 @@
 	FYPlaybackViewController* playbackViewController = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"FYPlaybackViewController"];
 	
 	playbackViewController.mediaItem = mediaItem;
-	if (!mediaItem.hasMediaSize || !mediaItem.hasMediaLength) {
+	if (!mediaItem.hasMediaLength) {
 		// subscribe for media length/size callback
 		playbackViewController.mediaPropertiesCallback = ^(int64_t mediaSize, int32_t mediaLength) {
 			__typeof(weakSelf) __strong strongSelf = weakSelf;
@@ -202,6 +237,34 @@
 	}
 	
 	[self.navigationController pushViewController:playbackViewController animated:YES];
+}
+
+- (void)keyboardWillShow:(NSNotification *)notification {
+	CGRect keyboardFrame = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+	
+	[UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^ {
+		_footerBottonConstraint.constant = keyboardFrame.size.height;
+		[self.view layoutIfNeeded];
+	} completion:nil];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification {
+	[UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^ {
+		_footerBottonConstraint.constant = 0;
+		[self.view layoutIfNeeded];
+	} completion:nil];
+}
+
+- (void)subscribeKeyboardNotifications
+{
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(keyboardWillShow:)
+												 name:UIKeyboardWillShowNotification
+											   object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(keyboardWillHide:)
+												 name:UIKeyboardWillHideNotification
+											   object:nil];
 }
 
 #pragma mark - UITableViewDelegate/Datasource

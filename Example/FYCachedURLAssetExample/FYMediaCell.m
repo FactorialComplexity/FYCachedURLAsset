@@ -42,12 +42,9 @@
 	_mediaSizeLabel.text = item.mediaSizeReadable;
 	_mediaLengthLabel.text = item.mediaLengthReadable;
 	
-	_mediaSizeLabel.hidden = !item.hasMediaSize;
-	_mediaLengthLabel.hidden = !item.hasMediaLength;
-	
-	_mediaDescriptionSeparatorLabel.hidden = _mediaSizeLabel.hidden && _mediaLengthLabel.hidden;
+	_mediaSizeLabel.hidden = _mediaLengthLabel.hidden = _mediaDescriptionSeparatorLabel.hidden = !item.hasMediaLength;
 
-	self.isCached = [[NSFileManager defaultManager] fileExistsAtPath:_media.cacheFilePath];
+	self.isCached = [[NSFileManager defaultManager] fileExistsAtPath:_media.cacheFilePath] && item.hasMediaLength;
 }
 
 - (void)setMediaName:(NSString*)name {

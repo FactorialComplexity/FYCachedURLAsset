@@ -25,7 +25,7 @@
 
 @import UIKit;
 
-@interface FYHomeViewController : UITableViewController
+@interface FYHomeViewController : UIViewController
 
 @end
 

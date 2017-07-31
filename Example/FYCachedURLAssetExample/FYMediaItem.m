@@ -53,10 +53,6 @@ static NSString *MediaLengthArchiveKey = @"mediaLength";
 	return [self lengthToReadableString:_mediaLength];
 }
 
-- (BOOL)hasMediaSize {
-	return _mediaSize > 0;
-}
-
 - (BOOL)hasMediaLength {
 	return _mediaLength > 0;
 }
