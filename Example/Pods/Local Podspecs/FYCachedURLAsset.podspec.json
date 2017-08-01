@@ -2,7 +2,7 @@
   "name": "FYCachedURLAsset",
   "version": "0.1.0",
   "summary": "Provides local cache layer for remote audio and video stream  files",
-  "description": "Handles simultaneous streaming and caching of audio and video files in a way that each byte is downloaded only once.",
+  "description": "It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an audio/video file while streaming and simultaneuosly saving downloaded data to a local URL. FYCachedURLAsset was designed to prevent download the same bytes twice.",
   "homepage": "https://github.com/FactorialComplexity/FYCachedURLAsset",
   "screenshots": "https://github.com/FactorialComplexity/FYCachedURLAsset/raw/master/FYCachedUrlAsset.png",
   "license": {
@@ -20,8 +20,8 @@
   "platforms": {
     "ios": "8.0"
   },
-  "source_files": "FYCachedURLAsset/Classes/*",
-  "public_header_files": "Pod/Classes/*.h",
+  "source_files": "FYCachedURLAsset/*",
+  "public_header_files": "Pod/*.h",
   "frameworks": [
     "Foundation",
     "UIKit",

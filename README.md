@@ -9,6 +9,9 @@ It's enhanced `AVURLAsset` with seamless cache layer. It handles the playing of 
 
 ## Example
 
+![screenshot](https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/media.png)
+![screenshot](https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/player.png)
+
 To run the example project, clone the repo, and run `pod install` from the Example directory first.
 
 ## Installation

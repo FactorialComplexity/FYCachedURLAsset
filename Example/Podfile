@@ -1,5 +1,7 @@
+platform :ios, '8.0'
+
 use_frameworks!
 
-target 'FYCachedURLAsset_Example' do
+target 'FYCachedURLAssetExample' do
   pod 'FYCachedURLAsset', :path => '../'
 end

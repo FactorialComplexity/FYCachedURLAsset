@@ -39,6 +39,7 @@
 	__weak IBOutlet UIButton *_skipForwardButton;
 	__weak IBOutlet UILabel *_timeLabel;
 	__weak IBOutlet UIButton *_playPauseButton;
+	__weak IBOutlet UILabel *_cachedLabel;
 	
 	AVPlayer *_player;
 	NSTimer* _timer;
@@ -53,6 +54,7 @@
 	
 	_timeLabel.text = @"";
 	self.title = _mediaItem.mediaName;
+	_cachedLabel.text = @"";
 	
 	[self navigationBarStyleForPlayback];
 	
@@ -77,11 +79,10 @@
 - (void)viewDidDisappear:(BOOL)animated {
 	[super viewDidDisappear:animated];
 	
-	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
-	[asset cancel];
+	[self dispose];
 	
-	[_player pause];
-	[_player replaceCurrentItemWithPlayerItem:nil];
+	[_timer invalidate];
+	_timer = nil;
 }
 
 - (void)viewWillLayoutSubviews {
@@ -114,14 +115,34 @@
 	}
 }
 
+- (IBAction)clearCacheClicked:(id)sender {
+	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
+	
+	[asset removeCache];
+	
+	[self dispose];	
+	
+	[self updateProgress];
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self resetPlayerWithURL:[NSURL URLWithString:_mediaItem.mediaURL]];
+	});
+}
+
 - (void)updateProgress {
 	FYCachedURLAsset* asset = (FYCachedURLAsset*)_player.currentItem.asset;
 	
+	float cachedAmount = 0;
+	
 	if (asset.cacheInfo.availableData) {
-		_progressViewWidthConstraint.constant = 1.0 * asset.cacheInfo.availableDataOnDisk / asset.cacheInfo.contentLength * _timeSlidedTrackView.frame.size.width;
+		cachedAmount = 1.0 * asset.cacheInfo.availableDataOnDisk / asset.cacheInfo.contentLength;
+		
+		_progressViewWidthConstraint.constant = cachedAmount * _timeSlidedTrackView.frame.size.width;
 	} else {
 		_progressViewWidthConstraint.constant = 0;
 	}
+	
+	_cachedLabel.text = [NSString stringWithFormat:@"%d%% Cached", (int)(cachedAmount * 100)];
 }
 
 - (IBAction)timeSliderValueChanged:(UISlider *)sender {
@@ -208,14 +229,34 @@
 	}];
 }
 
+- (void)dispose {
+	FYCachedURLAsset *asset = (FYCachedURLAsset *)_player.currentItem.asset;
+	[asset cancel];
+	
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:FYResourceForURLChangedNotification object:asset];
+	[[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:_player.currentItem];
+	[_player.currentItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp" context:NULL];
+	
+	[_player removeObserver:self forKeyPath:@"currentItem" context:NULL];
+	
+	[_player pause];
+	[_player replaceCurrentItemWithPlayerItem:nil];
+	_player = nil;
+	
+	_timeSlider.value = 0;
+	_timeLabel.text = @"";
+}
+
 - (void)updateTimeLabelWithTime:(CMTime)time duration:(CMTime)duration {
-	int32_t seconds = (time.value / time.timescale) % 60;
-	int32_t minutes = (int32_t)(time.value / time.timescale) / 60;
-	
-	int32_t totalSeconds = (duration.value / duration.timescale) % 60;
-	int32_t totalMinutes = (int32_t)(duration.value / duration.timescale) / 60;
-	
-	_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d / %02d:%02d", minutes, seconds, totalMinutes, totalSeconds];
+	if (_player) {
+		int32_t seconds = (time.value / time.timescale) % 60;
+		int32_t minutes = (int32_t)(time.value / time.timescale) / 60;
+		
+		int32_t totalSeconds = (duration.value / duration.timescale) % 60;
+		int32_t totalMinutes = (int32_t)(duration.value / duration.timescale) / 60;
+		
+		_timeLabel.text = [NSString stringWithFormat:@"%02d:%02d / %02d:%02d", minutes, seconds, totalMinutes, totalSeconds];
+	}
 }
 
 - (void)resetPlayerWithURL:(NSURL*)URL {
@@ -247,12 +288,16 @@
 	
 	if (_player.currentItem) {
 		[_player replaceCurrentItemWithPlayerItem:newItem];
-		[_player play];
+		if (_isPlaying) {
+			[_player play];
+		}
 	} else {
 		_player = [AVPlayer playerWithPlayerItem:newItem];
 		[newItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
 		[_player addObserver:self forKeyPath:@"currentItem" options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew context:NULL];
-		[_player play];
+		if (_isPlaying) {
+			[_player play];
+		}
 		
 		_playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
 		[_playerView.layer addSublayer:_playerLayer];

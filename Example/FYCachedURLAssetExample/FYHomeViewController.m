@@ -97,6 +97,10 @@ UITableViewDataSource
 	[_tableView addGestureRecognizer:tap];
 	
 	[self subscribeKeyboardNotifications];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+	[super viewDidAppear:animated];
 	
 	[self updateDatasource];
 }
@@ -244,6 +248,7 @@ UITableViewDataSource
 - (void)keyboardWillShow:(NSNotification *)notification {
 	CGRect keyboardFrame = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
 	
+	[self.view layoutIfNeeded];
 	[UIView animateWithDuration:0.4 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^ {
 		_footerBottonConstraint.constant = keyboardFrame.size.height;
 		[self.view layoutIfNeeded];
@@ -251,6 +256,7 @@ UITableViewDataSource
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification {
+	[self.view layoutIfNeeded];
 	[UIView animateWithDuration:0.25 delay:0 options:UIViewAnimationOptionCurveEaseOut animations:^ {
 		_footerBottonConstraint.constant = 0;
 		[self.view layoutIfNeeded];

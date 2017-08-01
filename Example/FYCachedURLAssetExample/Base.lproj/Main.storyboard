@@ -349,16 +349,35 @@
                                             <action selector="playPauseClicked:" destination="SOM-TI-iHx" eventType="touchUpInside" id="GRf-b7-3ao"/>
                                         </connections>
                                     </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="71% Cached" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EKu-mV-MMp">
+                                        <rect key="frame" x="15" y="88.5" width="78.5" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mjg-3l-gMn">
+                                        <rect key="frame" x="219" y="82" width="86" height="30"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="15"/>
+                                        <state key="normal" title="Clear Cache">
+                                            <color key="titleColor" red="0.48627450980392156" green="0.56470588235294117" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="clearCacheClicked:" destination="SOM-TI-iHx" eventType="touchUpInside" id="ClQ-NR-ArN"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="64C-Lo-wAu" firstAttribute="trailing" secondItem="AGp-zh-0cw" secondAttribute="trailing" id="1ns-N6-QCd"/>
                                     <constraint firstItem="4WQ-Tq-sTk" firstAttribute="trailing" secondItem="AGp-zh-0cw" secondAttribute="trailing" id="A4o-3G-t0Y"/>
+                                    <constraint firstItem="mjg-3l-gMn" firstAttribute="centerY" secondItem="7kX-vF-pt1" secondAttribute="centerY" id="DqH-mG-Pio"/>
                                     <constraint firstItem="AGp-zh-0cw" firstAttribute="leading" secondItem="LmA-zw-zE8" secondAttribute="trailing" id="G0Y-Qi-koo"/>
                                     <constraint firstItem="7kX-vF-pt1" firstAttribute="centerX" secondItem="jDm-im-zi6" secondAttribute="centerX" id="HnF-on-DUI"/>
+                                    <constraint firstItem="EKu-mV-MMp" firstAttribute="leading" secondItem="jDm-im-zi6" secondAttribute="leading" constant="15" id="ISy-Hr-sQl"/>
                                     <constraint firstItem="4WQ-Tq-sTk" firstAttribute="top" secondItem="AGp-zh-0cw" secondAttribute="bottom" id="Jbe-iI-UFh"/>
                                     <constraint firstItem="1gy-mH-dXi" firstAttribute="leading" secondItem="AGp-zh-0cw" secondAttribute="leading" id="Kge-Hj-mjh"/>
                                     <constraint firstAttribute="trailing" secondItem="c7o-37-BWI" secondAttribute="trailing" id="ObJ-cQ-ccz"/>
                                     <constraint firstItem="c7o-37-BWI" firstAttribute="leading" secondItem="AGp-zh-0cw" secondAttribute="trailing" id="OmA-1M-p0B"/>
+                                    <constraint firstItem="EKu-mV-MMp" firstAttribute="centerY" secondItem="7kX-vF-pt1" secondAttribute="centerY" id="Qqr-eb-fNL"/>
                                     <constraint firstItem="AGp-zh-0cw" firstAttribute="centerY" secondItem="LmA-zw-zE8" secondAttribute="centerY" id="UKI-6b-UyG"/>
                                     <constraint firstItem="64C-Lo-wAu" firstAttribute="centerY" secondItem="AGp-zh-0cw" secondAttribute="centerY" id="d92-cS-rfx"/>
                                     <constraint firstAttribute="bottom" secondItem="7kX-vF-pt1" secondAttribute="bottom" constant="2" id="i6T-fb-2fv"/>
@@ -368,6 +387,7 @@
                                     <constraint firstAttribute="height" constant="135" id="ra4-yg-fce"/>
                                     <constraint firstItem="LmA-zw-zE8" firstAttribute="top" secondItem="jDm-im-zi6" secondAttribute="top" constant="18" id="uMl-wG-e8X"/>
                                     <constraint firstItem="64C-Lo-wAu" firstAttribute="leading" secondItem="AGp-zh-0cw" secondAttribute="leading" id="v28-lF-j8l"/>
+                                    <constraint firstAttribute="trailing" secondItem="mjg-3l-gMn" secondAttribute="trailing" constant="15" id="ySk-5P-0pk"/>
                                 </constraints>
                             </view>
                         </subviews>
@@ -387,6 +407,7 @@
                     </view>
                     <connections>
                         <outlet property="_audioAnimationWebView" destination="wzr-gy-iR3" id="6jt-Iu-E7l"/>
+                        <outlet property="_cachedLabel" destination="EKu-mV-MMp" id="76H-LQ-zax"/>
                         <outlet property="_playPauseButton" destination="7kX-vF-pt1" id="XQe-FS-BPC"/>
                         <outlet property="_playerView" destination="4Kk-DA-WuR" id="g9T-9k-RGF"/>
                         <outlet property="_progressViewWidthConstraint" destination="Nae-7B-Wzv" id="qhS-hg-coc"/>
