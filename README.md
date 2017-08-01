@@ -18,7 +18,7 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 
 <b>Manual:</b>
 <br>
-Add to your project source files from `FYCachedURLAsset/Classes` folder
+Add to your project source files from `FYCachedURLAsset` folder
 <br>
 <br>
 <b>CocoaPods:</b>

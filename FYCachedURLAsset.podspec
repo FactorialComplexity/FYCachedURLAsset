@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'FYCachedURLAsset'
-  s.version          = '0.1.0'
+  s.version          = '1.0.0'
   s.summary          = 'Provides local cache layer for remote audio and video stream  files'
 
 # This description is used to generate tags and improve search results.
@@ -17,7 +17,7 @@ It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an
                        DESC
 
   s.homepage         = 'https://github.com/FactorialComplexity/FYCachedURLAsset'
-  s.screenshots     = 'https://github.com/FactorialComplexity/FYCachedURLAsset/raw/master/FYCachedUrlAsset.png'
+  s.screenshots     = 'https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/media.png', 'https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/player.png'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Vitaliy Ivanov' => 'wicharek@gmail.com', 'Viktor Naryshkin' => 'viktor.naryshkin@factorialcomplexity.com' }
   s.source           = { :git => 'https://github.com/FactorialComplexity/FYCachedURLAsset.git', :tag => s.version.to_s }
