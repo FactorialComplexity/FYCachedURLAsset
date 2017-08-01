@@ -32,11 +32,11 @@ pod 'FYCachedURLAsset'
 ## How to use
 
 <i>FYCachedURLAsset</i> is a replacement for `[AVURLAsset URLAssetWithURL:URL options:nil]`, but with additional local file path argument
-<pre>
+```objective-c
 NSString *cacheFilePath = [documentsPath stringByAppendingPathComponent:[URL lastPathComponent]];
 
 FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFilePath:cacheFilePath];
-</pre>
+```
 
 ## Features
 
