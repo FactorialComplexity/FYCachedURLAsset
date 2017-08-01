@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double Pods_FYCachedURLAsset_ExampleVersionNumber;
-FOUNDATION_EXPORT const unsigned char Pods_FYCachedURLAsset_ExampleVersionString[];
+FOUNDATION_EXPORT double Pods_FYCachedURLAssetExampleVersionNumber;
+FOUNDATION_EXPORT const unsigned char Pods_FYCachedURLAssetExampleVersionString[];
 

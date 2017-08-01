@@ -25,12 +25,8 @@ It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an
 
   s.ios.deployment_target = '8.0'
 
-  s.source_files = 'FYCachedURLAsset/Classes/*'
-  
-  # s.resource_bundles = {
-  #   'FYCachedURLAsset' => ['FYCachedURLAsset/Assets/*.png']
-  # }
+  s.source_files = 'FYCachedURLAsset/*'
 
-  s.public_header_files = 'Pod/Classes/*.h'
+  s.public_header_files = 'Pod/*.h'
   s.frameworks = 'Foundation', 'UIKit', 'AVFoundation'
 end
