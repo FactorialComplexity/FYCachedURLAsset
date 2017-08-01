@@ -1,0 +1,16 @@
+PODS:
+  - FYCachedURLAsset (0.1.0)
+
+DEPENDENCIES:
+  - FYCachedURLAsset (from `../`)
+
+EXTERNAL SOURCES:
+  FYCachedURLAsset:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  FYCachedURLAsset: b050ddcd20930db95d5253d0dd98f2651a68764d
+
+PODFILE CHECKSUM: af967db813c9cc73340240c783d682112b1d012b
+
+COCOAPODS: 1.2.1
