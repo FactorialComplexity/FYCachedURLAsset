@@ -57,4 +57,6 @@ FYCachedURLAssetCacheInfo;
 
 - (void)cancel;
 
+- (void)removeCache;
+
 @end

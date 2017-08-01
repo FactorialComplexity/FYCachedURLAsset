@@ -76,8 +76,20 @@ NSString *const FYResourceForURLDoesntExistNotificationName = @"FYResourceForURL
 	return info;
 }
 
-- (void)cancel {
+- (void)cancel
+{
 	[_contentProvider cancel];
+	
+	[_contentProvider removeAsset:self];
+}
+
+- (void)removeCache
+{
+	[self cancel];
+	
+	[[NSFileManager defaultManager] removeItemAtPath:[NSString stringWithFormat:@"%@~part", _cacheFilePath] error:nil];
+	[[NSFileManager defaultManager] removeItemAtPath:[NSString stringWithFormat:@"%@~meta", _cacheFilePath] error:nil];
+	[[NSFileManager defaultManager] removeItemAtPath:[NSString stringWithFormat:@"%@", _cacheFilePath] error:nil];
 }
 
 - (void)dealloc
