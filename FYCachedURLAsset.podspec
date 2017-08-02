@@ -17,7 +17,7 @@ It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an
                        DESC
 
   s.homepage         = 'https://github.com/FactorialComplexity/FYCachedURLAsset'
-  s.screenshots     = 'https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/media.png', 'https://raw.githubusercontent.com/factorialcomplexity/master/FYCachedURLAsset/Screenshots/player.png'
+  s.screenshots     = 'https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/media.png', 'https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/player.png'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Vitaliy Ivanov' => 'wicharek@gmail.com', 'Viktor Naryshkin' => 'viktor.naryshkin@factorialcomplexity.com' }
   s.source           = { :git => 'https://github.com/FactorialComplexity/FYCachedURLAsset.git', :tag => s.version.to_s }
