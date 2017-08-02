@@ -27,6 +27,6 @@ It's enhanced AVURLAsset with seamless cache layer. It handles the playing of an
 
   s.source_files = 'FYCachedURLAsset/*'
 
-  s.public_header_files = 'Pod/*.h'
+  s.public_header_files = 'FYCachedURLAsset/*.h'
   s.frameworks = 'Foundation', 'UIKit', 'AVFoundation'
 end
