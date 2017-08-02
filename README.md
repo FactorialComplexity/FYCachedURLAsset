@@ -7,12 +7,6 @@ FYCachedURLAsset
 
 It's enhanced `AVURLAsset` with seamless cache layer. It handles the playing of an audio/video file while streaming and simultaneuosly saving downloaded data to a local URL. <i>FYCachedURLAsset</i> was designed to prevent download the same bytes twice. 
 
-## Example
-
-![screenshot](https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/media.png) ![screenshot](https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/player.png)
-
-To run the example project, clone the repo, and run `pod install` from the Example directory first.
-
 ## Installation
 
 <b>Manual:</b>
@@ -48,3 +42,11 @@ FYCachedURLAsset *asset = [FYCachedURLAsset cachedURLAssetWithURL:URL cacheFileP
 ## License
 
 <i>FYCachedURLAsset</i> is available under the MIT license. See the LICENSE file for more info.
+
+## Example
+
+To run the example project, clone the repo, and run `pod install` from the `Example` directory, open workspace file and run.
+
+![screenshot](https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/media.png) ![screenshot](https://raw.githubusercontent.com/factorialcomplexity/FYCachedURLAsset/master/Screenshots/player.png)
+
+
